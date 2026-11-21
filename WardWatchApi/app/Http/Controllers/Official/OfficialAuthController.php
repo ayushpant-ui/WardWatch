@@ -33,7 +33,7 @@ class OfficialAuthController extends Controller
                 ],
 
                 'phone' => [
-                    'required',
+                    'nullable',
                     'string',
                     'max:20',
                     'unique:officials,phone',
@@ -41,13 +41,12 @@ class OfficialAuthController extends Controller
 
                 'municipality' => ['required', 'string', 'max:255'],
 
-                'ward' => ['required', 'integer', 'min:1'],
+                'ward_no' => ['required', 'integer', 'min:1'],
 
-                'official_post' => ['required', 'string', 'max:255'],
+                'designation' => ['required', 'string', 'max:255'],
 
                 'password' => [
                     'required',
-                    'confirmed',
                     Password::min(8),
                 ],
             ]);
@@ -58,23 +57,17 @@ class OfficialAuthController extends Controller
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
                 'municipality' => $validated['municipality'],
-                'ward' => $validated['ward'],
-                'official_post' => $validated['official_post'],
-                'password' => Hash::make($validated['password']),
+                'ward' => $validated['ward_no'],
+                'official_post' => $validated['designation'],
+                'password' => $validated['password'],
                 'is_active' => true,
             ]);
 
-            // Generate Sanctum token
-            $token = $official->createToken('official-token')->plainTextToken;
 
             return response()->json([
                 'success' => true,
                 'message' => 'Official registered successfully',
-
                 'official' => $official,
-
-                'token' => $token,
-                'token_type' => 'Bearer',
             ], 201);
         }
 
