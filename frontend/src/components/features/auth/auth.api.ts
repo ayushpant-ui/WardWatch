@@ -3,18 +3,19 @@ import api from '@/lib/axios';
 // Registration
 
 export interface RegisterPayload {
-  fullName: string;
+  name: string;
   email: string;
   password: string;
 }
 
 export const registerUser = async (data: RegisterPayload) => {
-  const response = await api.post('/auth/register', data);
+  const response = await api.post('/user/register', data);
 
   return response.data;
 };
 
 // Login
+
 export interface LoginPayload {
   email: string;
   password: string;
@@ -40,7 +41,7 @@ export const loginUser = async (
   data: LoginPayload
 ): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>(
-    '/auth/login',
+    '/user/login',
     data
   );
 

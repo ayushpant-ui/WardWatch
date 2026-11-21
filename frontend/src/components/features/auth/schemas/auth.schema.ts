@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const registerSchema = z
   .object({
-    fullName: z
+    name: z
       .string()
       .min(3, 'Name must contain at least 3 characters')
       .max(100, 'Name is too long'),

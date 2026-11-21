@@ -8,7 +8,7 @@ import ThemeSwitcher from '@/components/shared/ThemeSwitcher';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Transparency', href: '/transparency' },
-  { name: 'Report Issue', href: '/complaints' },
+  { name: 'Report Issue', href: '/register' },
 ];
 
 export default function PublicNavbar() {
