@@ -1,5 +1,5 @@
-import ComplaintList from '@/components/features/citizen/components/ComplaintList';
+import CitizenDashboardPage from '../dashboard/page';
 
-export default function ComplaintsPage() {
-  return <ComplaintList />;
+export default function CitizenComplaintsPage() {
+  return <CitizenDashboardPage />;
 }

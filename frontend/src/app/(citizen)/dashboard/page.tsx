@@ -1,110 +1,111 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import axios from 'axios';
-
-import { PlusCircle, Loader2 } from 'lucide-react';
-
-import DashboardStats from '@/components/features/citizen/components/DashboardStats';
-import RecentComplaints from '@/components/features/citizen/components/RecentComplaints';
-
-import { getMyComplaints } from '@/components/features/citizen/complaint/complaints.api';
-
-import { Complaint } from '@/components/features/citizen/complaint/complaint.types';
+import { Plus } from 'lucide-react';
+import { useComplaints } from '@/hooks/useComplaints';
+import CitizenStatsStrip from '@/components/features/citizen/CitizenStatsStrip';
+import ComplaintCard from '@/components/features/complaints/ComplaintCard';
+import ComplaintTimeline from '@/components/features/complaints/ComplaintTimeline';
+import FileComplaintForm from '@/components/features/complaints/FileComplaintForm';
 
 export default function CitizenDashboardPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+    const { complaints, loading, isFallback, refetch } = useComplaints();
+  const [selectedId, setSelectedId] = useState<number | string | null>(null);
+  const [filter, setFilter] = useState<'All' | 'In progress' | 'Resolved' | 'Escalated'>('All');
 
-  useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const response = await getMyComplaints();
-
-        setComplaints(response.data.data || []);
-
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setError(
-            error.response?.data?.message ||
-            'Unable to load your complaints.'
-          );
-        } else {
-          setError('Something went wrong.');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchComplaints();
-  }, []);
-
-  const pending = complaints.filter(
-    (item) =>
-      item.status === 'submitted' ||
-      item.status === 'under_review'
-  ).length;
-
-  const inProgress = complaints.filter(
-    (item) => item.status === 'in_progress'
-  ).length;
-
-  const resolved = complaints.filter(
-    (item) => item.status === 'resolved'
-  ).length;
+  const filtered = filter === 'All' ? complaints : complaints.filter((c) => c.status === filter);
+  const activeComplaint =
+    complaints.find((c) => c.id === selectedId) || filtered[0] || complaints[0] || null;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-
-      {/* Welcome */}
-      <section className="flex flex-wrap items-center justify-between gap-5">
-
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
-            Welcome to Your Dashboard
-          </h1>
-
-          <p className="mt-2 text-sm text-muted">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Welcome to Your Dashboard
+            </h1>
+            {isFallback && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                Demo Data
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted mt-1">
             Monitor your complaints and stay informed about your community.
           </p>
         </div>
 
         <Link
           href="/complaints/new"
-          className="flex items-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-medium text-white transition hover:opacity-90"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary hover:opacity-90 text-white dark:text-slate-950 font-semibold px-4 py-2.5 text-sm transition-opacity self-start sm:self-auto"
         >
-          <PlusCircle size={18} />
+          <Plus className="w-4 h-4" />
           Report an Issue
         </Link>
+      </div>
 
-      </section>
+      {/* KPI Strip: Filed / In progress / Resolved */}
+      <CitizenStatsStrip complaints={complaints} />
 
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <Loader2 className="animate-spin text-primary" size={30} />
+      {/* 2-Column Split: Complaints + Timeline (Left) | File Complaint Form (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="rounded-2xl bg-card border border-border p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">My complaints</h2>
+              <div className="flex flex-wrap gap-1.5">
+                {(['All', 'In progress', 'Resolved', 'Escalated'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setFilter(tab)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                      filter === tab
+                        ? 'bg-primary text-white dark:text-slate-950 font-semibold'
+                        : 'bg-secondary text-muted hover:text-foreground'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((complaint) => (
+                  <ComplaintCard
+                    key={complaint.id}
+                    complaint={complaint}
+                    isSelected={activeComplaint?.id === complaint.id}
+                    onSelect={setSelectedId}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {activeComplaint && <ComplaintTimeline complaint={activeComplaint} />}
         </div>
-      ) : error ? (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-600 dark:bg-red-950">
-          {error}
-        </div>
-      ) : (
-        <>
-          {/* Statistics */}
-          <DashboardStats
-            total={complaints.length}
-            pending={pending}
-            inProgress={inProgress}
-            resolved={resolved}
-          />
 
-          {/* Recent Complaints */}
-          <RecentComplaints complaints={complaints} />
-        </>
-      )}
-
+       <div className="lg:col-span-5">
+  <FileComplaintForm
+    onSuccess={(newComplaint) => {
+      setSelectedId(newComplaint.id);
+      refetch();
+    }}
+  />
+</div>
+      </div>
     </div>
   );
 }

@@ -1,35 +1,31 @@
-import Link from 'next/link';
+'use client';
 
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-
-import ComplaintForm from '@/components/features/citizen/components/ComplaintForm';
+import Link from 'next/link';
+import { useComplaints } from '@/hooks/useComplaints';
+import FileComplaintForm from '@/components/features/complaints/FileComplaintForm';
 
 export default function NewComplaintPage() {
+  const router = useRouter();
+  const { createComplaint } = useComplaints();
+
   return (
-    <div className="mx-auto max-w-3xl space-y-7">
+    <div className="max-w-2xl mx-auto space-y-6">
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-foreground"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Dashboard
+      </Link>
 
-      <div>
-        <Link
-          href="/complaints"
-          className="mb-5 inline-flex items-center gap-2 text-sm text-muted hover:text-primary"
-        >
-          <ArrowLeft size={17} />
-          Back to complaints
-        </Link>
-
-        <h1 className="text-2xl font-bold">
-          Report a Community Issue
-        </h1>
-
-        <p className="mt-2 text-sm text-muted">
-          Help improve your community by reporting problems that need attention.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-5 sm:p-8">
-        <ComplaintForm />
-      </div>
-
+  <FileComplaintForm
+  onSuccess={() => {
+    router.push('/dashboard');
+  }}
+/>
     </div>
   );
 }
