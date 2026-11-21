@@ -21,8 +21,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password'    => ['required', 'confirmed', Password::defaults()],
-            'device_name' => ['nullable', 'string', 'max:255'],
+            'password'    => ['required', Password::defaults()],
         ]);
 
         $user = User::create([
@@ -30,23 +29,16 @@ class AuthController extends Controller
             'email'    => $validated['email'],
             'password' => $validated['password'], // Auto-hashed by User model cast
         ]);
-
-        $token = $user->createToken(
-            $validated['device_name'] ?? 'api-token',
-            ['role:user']
-        )->plainTextToken;
-
         return response()->json([
             'message' => 'Registration successful.',
             'user'    => $user,
-            'token'   => $token,
         ], 201);
     }
 
     /**
      * Authenticate using built-in Auth::attempt() and issue a Sanctum token.
      */
-    public function login(Request $request): JsonResponse
+ public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email'       => ['required', 'email'],
@@ -54,8 +46,7 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Uses Laravel's built-in authentication provider to verify credentials
-        if (! Auth::attempt([
+        if (!Auth::attempt([
             'email'    => $validated['email'],
             'password' => $validated['password'],
         ])) {
@@ -65,11 +56,8 @@ class AuthController extends Controller
         }
 
         /** @var User $user */
-        $user  = Auth::user();
-        $token = $user->createToken(
-            $validated['device_name'] ?? 'api-token',
-            ['role:user']
-        )->plainTextToken;
+        $user = Auth::User();
+        $token = $user->createToken('customer_auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful.',
