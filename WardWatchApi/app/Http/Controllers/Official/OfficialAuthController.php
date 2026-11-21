@@ -44,17 +44,20 @@ class OfficialAuthController extends Controller
             ]);
 
             // Create Official account
-            $official = Official::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'municipality' => $validated['municipality'],
-                'ward' => $validated['ward_no'],
-                'official_post' => $validated['designation'],
-                'password' => $validated['password'],
-                'is_active' => true,
-            ]);
+           // Create Official account using Eloquent save()
 
+            $official = new Official();
+
+            $official->name = $validated['name'];
+            $official->email = $validated['email'];
+            $official->phone = $validated['phone'] ?? null;
+            $official->municipality = $validated['municipality'];
+            $official->ward = $validated['ward_no'];
+            $official->official_post = $validated['designation'];
+            $official->password = $validated['password'];
+            $official->is_active = true;
+
+            $official->save();
 
             return response()->json([
                 'success' => true,
