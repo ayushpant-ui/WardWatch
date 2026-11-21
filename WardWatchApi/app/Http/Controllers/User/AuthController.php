@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -31,7 +31,10 @@ class AuthController extends Controller
             'password' => $validated['password'], // Auto-hashed by User model cast
         ]);
 
-        $token = $user->createToken($validated['device_name'] ?? 'api-token')->plainTextToken;
+        $token = $user->createToken(
+            $validated['device_name'] ?? 'api-token',
+            ['role:user']
+        )->plainTextToken;
 
         return response()->json([
             'message' => 'Registration successful.',
@@ -63,7 +66,10 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user  = Auth::user();
-        $token = $user->createToken($validated['device_name'] ?? 'api-token')->plainTextToken;
+        $token = $user->createToken(
+            $validated['device_name'] ?? 'api-token',
+            ['role:user']
+        )->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful.',
@@ -108,7 +114,7 @@ class AuthController extends Controller
     public function changePassword(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password:api'],
+            'current_password' => ['required', 'current_password'],
             'password'         => ['required', 'confirmed', Password::defaults()],
         ]);
 
@@ -117,9 +123,11 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Optional: revoke all other tokens except current session token
-        $currentTokenId = $user->currentAccessToken()->id;
-        $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+        // Revoke all other tokens except the current token
+        $currentTokenId = $user->currentAccessToken()?->id;
+        if ($currentTokenId) {
+            $user->tokens()->where('id', '!=', $currentTokenId)->delete();
+        }
 
         return response()->json([
             'message' => 'Password changed successfully.',
