@@ -56,7 +56,6 @@ class OfficialAuthController extends Controller
             $official->official_post = $validated['designation'];
             $official->password = $validated['password'];
             $official->is_active = true;
-            dd("i am here ");
             $official->save();
 
             return response()->json([
