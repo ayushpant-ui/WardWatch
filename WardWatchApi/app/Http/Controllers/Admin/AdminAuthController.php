@@ -9,13 +9,13 @@ class AdminAuthController extends Controller
 {
     //
     public function login(Request $request): JsonResponse
-        { dd("i reached to login function");
+        { 
+            dd("i reached to login function");
             $validated = $request->validate([
                 'email'       => ['required', 'email'],
                 'password'    => ['required', 'string'],
                 'device_name' => ['nullable', 'string', 'max:255'],
             ]);
-
             if (!Auth::attempt([
                 'email'    => $validated['email'],
                 'password' => $validated['password'],
