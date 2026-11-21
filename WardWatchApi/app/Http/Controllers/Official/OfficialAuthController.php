@@ -47,7 +47,7 @@ class OfficialAuthController extends Controller
            // Create Official account using Eloquent save()
 
             $official = new Official();
-
+            dd($official);
             $official->name = $validated['name'];
             $official->email = $validated['email'];
             $official->phone = $validated['phone'] ?? null;
