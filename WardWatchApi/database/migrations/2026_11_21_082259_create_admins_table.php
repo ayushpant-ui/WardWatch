@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('phone')->nullable();
+            $table->foreignId('municipality_id')
+                    ->unique() // Enforces 1-to-1: only one admin per municipality
+                    ->constrained('municipalities')
+                    ->onDelete('cascade');
             $table->string('password');
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
