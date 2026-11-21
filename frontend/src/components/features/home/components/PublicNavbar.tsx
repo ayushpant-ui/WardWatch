@@ -8,6 +8,7 @@ import ThemeSwitcher from '@/components/shared/ThemeSwitcher';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Transparency', href: '/transparency' },
+  { name: 'Officials', href: '/officials/register' },
   { name: 'Report Issue', href: '/register' },
 ];
 
@@ -72,6 +73,7 @@ export default function PublicNavbar() {
           onClick={() => setMenuOpen(!menuOpen)}
           className="rounded-lg p-2 text-foreground hover:bg-secondary md:hidden"
           aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
         >
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -81,12 +83,13 @@ export default function PublicNavbar() {
       {menuOpen && (
         <div className="border-t border-border bg-background px-6 py-5 md:hidden">
           <div className="flex flex-col gap-5">
+
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-foreground"
+                className="text-sm font-medium text-foreground transition-colors hover:text-primary"
               >
                 {item.name}
               </Link>
@@ -99,6 +102,7 @@ export default function PublicNavbar() {
 
             <Link
               href="/login"
+              onClick={() => setMenuOpen(false)}
               className="rounded-lg border border-border px-4 py-2.5 text-center text-sm font-semibold text-foreground"
             >
               Login
@@ -106,10 +110,12 @@ export default function PublicNavbar() {
 
             <Link
               href="/register"
+              onClick={() => setMenuOpen(false)}
               className="rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white"
             >
               Get Started
             </Link>
+
           </div>
         </div>
       )}
