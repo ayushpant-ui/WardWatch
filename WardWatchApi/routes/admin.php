@@ -1,20 +1,16 @@
 <?php
 
-use App\Http\Controllers\User\AuthController;
-use App\Models\User;
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Models\Admin;
 use Illuminate\Support\Facades\Route;
 
-// Public user routes -> /user/register, /user/login
-Route::post('/register', [AuthController::class, 'register'])->name('register');
-Route::post('/login', [AuthController::class, 'login'])
+Route::post('/login', [AdminAuthController::class, 'login'])
     ->middleware('throttle:6,1')
     ->name('login');
-
-// Protected user routes -> /user/me, /user/profile, /user/password, /user/logout, /user/logout-all
 Route::middleware(['auth:sanctum', 'token.role:' . User::class . ',role:user'])->group(function () {
-    Route::get('/me', [AuthController::class, 'me'])->name('me');
-    Route::patch('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/password', [AuthController::class, 'changePassword'])->name('password.update');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout.all');
+    Route::get('/me', [AdminAuthController::class, 'me'])->name('me');
+    Route::patch('/profile', [AdminAuthController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/password', [AdminAuthController::class, 'changePassword'])->name('password.update');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+    Route::post('/logout-all', [AdminAuthController::class, 'logoutAll'])->name('logout.all');
 });
