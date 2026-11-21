@@ -22,30 +22,21 @@ class OfficialAuthController extends Controller
  */
     public function register(Request $request): JsonResponse
         {
-            dd("i am at official registration");
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-
                 'email' => [
                     'required',
                     'email',
                     'max:255',
-                    'unique:officials,email',
-                ],
-
+                    'unique:officials,email',],
                 'phone' => [
                     'nullable',
                     'string',
                     'max:20',
-                    'unique:officials,phone',
-                ],
-
+                    'unique:officials,phone',],
                 'municipality' => ['required', 'string', 'max:255'],
-
                 'ward_no' => ['required', 'integer', 'min:1'],
-
                 'designation' => ['required', 'string', 'max:255'],
-
                 'password' => [
                     'required',
                     Password::min(8),
