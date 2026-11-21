@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Official;
 
 use App\Http\Controllers\Controller;
-use App\Models\Officials;
+use App\Models\Official;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -24,16 +24,8 @@ class OfficialAuthController extends Controller
         {
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
-                'email' => [
-                    'required',
-                    'email',
-                    'max:255',
-                    'unique:officials,email',],
-                'phone' => [
-                    'nullable',
-                    'string',
-                    'max:20',
-                    'unique:officials,phone',],
+                'email' => ['required','email','max:255','unique:officials,email',],
+                'phone' => ['nullable','string','max:20','unique:officials,phone',],
                 'municipality' => ['required', 'string', 'max:255'],
                 'ward_no' => ['required', 'integer', 'min:1'],
                 'designation' => ['required', 'string', 'max:255'],
@@ -46,8 +38,8 @@ class OfficialAuthController extends Controller
             // Create Official account
            // Create Official account using Eloquent save()
 
-            $official = new Officials();
-            dd($official);
+
+            $official = new Official();
             $official->name = $validated['name'];
             $official->email = $validated['email'];
             $official->phone = $validated['phone'] ?? null;
@@ -162,7 +154,6 @@ class OfficialAuthController extends Controller
             'current_password' => ['required', 'string'],
             'password' => [
                 'required',
-                'confirmed',
                 Password::min(8),
             ],
         ]);
@@ -176,7 +167,7 @@ class OfficialAuthController extends Controller
         }
 
         $official->update([
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
         ]);
 
         return response()->json([
