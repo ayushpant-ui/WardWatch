@@ -1,27 +1,29 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
 import ThemeSwitcher from '@/components/shared/ThemeSwitcher';
 
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Transparency', href: '/transparency' },
-  { name: 'Officials', href: '/officials/register' },
+  { name: 'Officials', href: '/officials/login' },
   { name: 'Report Issue', href: '/register' },
+  { name: 'Admin', href: '/admin/login' },
 ];
 
 export default function PublicNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white font-bold">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary font-bold text-white">
             W
           </div>
 
@@ -36,16 +38,28 @@ export default function PublicNavbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden items-center gap-8 md:flex">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-sm font-medium text-muted transition-colors hover:text-primary"
-            >
-              {item.name}
-            </Link>
-          ))}
+        <div className="hidden items-center gap-7 md:flex">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+            const isAdmin = item.name === 'Admin';
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  isAdmin
+                    ? 'rounded-lg border border-border bg-card px-3 py-1.5 text-foreground hover:border-primary hover:text-primary'
+                    : isActive
+                    ? 'text-primary'
+                    : 'text-muted hover:text-primary'
+                }`}
+              >
+                {isAdmin && <ShieldCheck size={15} className="text-primary" />}
+                {item.name}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Right Actions */}
@@ -82,20 +96,20 @@ export default function PublicNavbar() {
       {/* Mobile Navigation */}
       {menuOpen && (
         <div className="border-t border-border bg-background px-6 py-5 md:hidden">
-          <div className="flex flex-col gap-5">
-
+          <div className="flex flex-col gap-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+                className="flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
               >
+                {item.name === 'Admin' && <ShieldCheck size={16} className="text-primary" />}
                 {item.name}
               </Link>
             ))}
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-2 border-t border-border">
               <span className="text-sm text-muted">Appearance</span>
               <ThemeSwitcher />
             </div>
@@ -115,7 +129,6 @@ export default function PublicNavbar() {
             >
               Get Started
             </Link>
-
           </div>
         </div>
       )}
