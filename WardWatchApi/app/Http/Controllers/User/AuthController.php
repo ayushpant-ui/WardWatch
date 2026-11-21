@@ -38,33 +38,33 @@ class AuthController extends Controller
     /**
      * Authenticate using built-in Auth::attempt() and issue a Sanctum token.
      */
- public function login(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'email'       => ['required', 'email'],
-            'password'    => ['required', 'string'],
-            'device_name' => ['nullable', 'string', 'max:255'],
-        ]);
+    public function login(Request $request): JsonResponse
+        {
+            $validated = $request->validate([
+                'email'       => ['required', 'email'],
+                'password'    => ['required', 'string'],
+                'device_name' => ['nullable', 'string', 'max:255'],
+            ]);
 
-        if (!Auth::attempt([
-            'email'    => $validated['email'],
-            'password' => $validated['password'],
-        ])) {
+            if (!Auth::attempt([
+                'email'    => $validated['email'],
+                'password' => $validated['password'],
+            ])) {
+                return response()->json([
+                    'message' => 'The provided credentials are incorrect.',
+                ], 401);
+            }
+
+            /** @var User $user */
+            $user = Auth::User();
+            $token = $user->createToken('customer_auth_token')->plainTextToken;
+
             return response()->json([
-                'message' => 'The provided credentials are incorrect.',
-            ], 401);
+                'message' => 'Login successful.',
+                'user'    => $user,
+                'token'   => $token,
+            ]);
         }
-
-        /** @var User $user */
-        $user = Auth::User();
-        $token = $user->createToken('customer_auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful.',
-            'user'    => $user,
-            'token'   => $token,
-        ]);
-    }
 
     /**
      * Get the currently authenticated user's profile.
