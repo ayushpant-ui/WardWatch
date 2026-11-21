@@ -1,3 +1,4 @@
+
 import api from '@/lib/axios';
 
 // Registration
@@ -23,18 +24,14 @@ export interface LoginPayload {
 
 export interface AuthUser {
   id: number;
-  fullName: string;
+  name: string;
   email: string;
   role: 'citizen' | 'ward_admin' | 'municipal_admin';
 }
 
-export interface LoginResponse {
-  success: boolean;
+export interface LoginResponse extends AuthUser {
   message: string;
-  data: {
-    accessToken: string;
-    user: AuthUser;
-  };
+  accessToken: string;
 }
 
 export const loginUser = async (

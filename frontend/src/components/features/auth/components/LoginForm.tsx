@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -30,33 +31,33 @@ export default function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-
     defaultValues: {
       email: '',
       password: '',
     },
   });
 
-  // ===============================
   // Login Handler
-  // ===============================
-
   const onSubmit = async (data: LoginFormData) => {
     try {
       setServerError('');
 
-      // Called Laravel Login API
+      // Call Laravel Login API
       const response = await loginUser(data);
 
-      const { accessToken, user } = response.data;
+      // Laravel returns a flat response
+      const { accessToken, id, name, email, role } = response;
 
-      // Stores authentication data
-      // Temporary approach: sessionStorage.
+      // Store authentication data
       sessionStorage.setItem('accessToken', accessToken);
-      sessionStorage.setItem('user', JSON.stringify(user));
 
-      // Redirects according to user role
-      switch (user.role) {
+      sessionStorage.setItem(
+        'user',
+        JSON.stringify({ id, name, email, role })
+      );
+
+      // Redirect according to user role
+      switch (role) {
         case 'citizen':
           router.push('/complaints');
           break;
@@ -106,7 +107,6 @@ export default function LoginForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-5"
     >
-
       {/* Email */}
       <div>
         <label className="mb-2 block text-sm font-medium">
@@ -130,9 +130,7 @@ export default function LoginForm() {
 
       {/* Password */}
       <div>
-
         <div className="mb-2 flex items-center justify-between">
-
           <label className="text-sm font-medium">
             Password
           </label>
@@ -143,11 +141,9 @@ export default function LoginForm() {
           >
             Forgot password?
           </Link>
-
         </div>
 
         <div className="relative">
-
           <input
             {...register('password')}
             type={showPassword ? 'text' : 'password'}
@@ -170,7 +166,6 @@ export default function LoginForm() {
               <Eye size={18} />
             )}
           </button>
-
         </div>
 
         {errors.password && (
@@ -178,7 +173,6 @@ export default function LoginForm() {
             {errors.password.message}
           </p>
         )}
-
       </div>
 
       {/* API Error */}
@@ -207,7 +201,6 @@ export default function LoginForm() {
       {/* Register Link */}
       <p className="text-center text-sm text-muted">
         Don't have an account?{' '}
-
         <Link
           href="/register"
           className="font-semibold text-primary hover:underline"
@@ -215,7 +208,6 @@ export default function LoginForm() {
           Register
         </Link>
       </p>
-
     </form>
   );
 }
