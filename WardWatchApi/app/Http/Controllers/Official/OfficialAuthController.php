@@ -14,49 +14,57 @@ use Illuminate\Validation\ValidationException;
 class OfficialAuthController extends Controller
 {
     /**
+     * Official Registration
+     */
+    public function register(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:officials,email',
+            ],
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                'unique:officials,phone',
+            ],
+            'municipality' => ['required', 'string', 'max:255'],
+            'ward_no' => ['required', 'integer', 'min:1'],
+            'designation' => ['required', 'string', 'max:255'],
+            'password' => [
+                'required',
+                Password::min(8),
+            ],
+        ]);
+
+        // Create Official using Eloquent save()
+        $official = new Official();
+
+        $official->name = $validated['name'];
+        $official->email = $validated['email'];
+        $official->phone = $validated['phone'] ?? null;
+        $official->municipality = $validated['municipality'];
+        $official->ward_no = $validated['ward_no'];
+        $official->designation = $validated['designation'];
+        $official->password = $validated['password'];
+        $official->is_active = true;
+
+        $official->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Official registered successfully',
+            'official' => $official,
+        ], 201);
+    }
+
+    /**
      * Official Login
      */
-
-/**
- * Official Registration
- */
-    public function register(Request $request): JsonResponse
-        {
-            $validated = $request->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required','email','max:255','unique:officials,email',],
-                'phone' => ['nullable','string','max:20','unique:officials,phone',],
-                'municipality' => ['required', 'string', 'max:255'],
-                'ward_no' => ['required', 'integer', 'min:1'],
-                'designation' => ['required', 'string', 'max:255'],
-                'password' => [
-                    'required',
-                    Password::min(8),
-                ],
-            ]);
-
-            // Create Official account
-           // Create Official account using Eloquent save()
-
-
-            $official = new Official();
-            $official->name = $validated['name'];
-            $official->email = $validated['email'];
-            $official->phone = $validated['phone'] ?? null;
-            $official->municipality = $validated['municipality'];
-            $official->ward = $validated['ward_no'];
-            $official->official_post = $validated['designation'];
-            $official->password = $validated['password'];
-            $official->is_active = true;
-            $official->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Official registered successfully',
-                'official' => $official,
-            ], 201);
-        }
-
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
@@ -64,7 +72,10 @@ class OfficialAuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $official = Official::where('email', $credentials['email'])->first();
+        $official = Official::where(
+            'email',
+            $credentials['email']
+        )->first();
 
         if (
             !$official ||
@@ -78,11 +89,10 @@ class OfficialAuthController extends Controller
         if (!$official->is_active) {
             return response()->json([
                 'success' => false,
-                'message' => 'Your account has been deactivated. Please contact the administrator.',
+                'message' => 'Your account has been deactivated.',
             ], 403);
         }
 
-        // Create Sanctum token
         $token = $official->createToken('official-token')->plainTextToken;
 
         return response()->json([
@@ -91,11 +101,11 @@ class OfficialAuthController extends Controller
             'official' => $official,
             'token' => $token,
             'token_type' => 'Bearer',
-        ], 200);
+        ]);
     }
 
     /**
-     * Get Logged-in Official Profile
+     * Get Logged-in Official
      */
     public function me(Request $request): JsonResponse
     {
@@ -125,18 +135,19 @@ class OfficialAuthController extends Controller
 
             'phone' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
                 'max:20',
                 Rule::unique('officials', 'phone')->ignore($official->id),
             ],
 
             'municipality' => ['sometimes', 'required', 'string', 'max:255'],
-            'ward' => ['sometimes', 'required', 'integer', 'min:1'],
-            'official_post' => ['sometimes', 'required', 'string', 'max:255'],
+            'ward_no' => ['sometimes', 'required', 'integer', 'min:1'],
+            'designation' => ['sometimes', 'required', 'string', 'max:255'],
         ]);
 
-        $official->update($validated);
+        $official->fill($validated);
+        $official->save();
 
         return response()->json([
             'success' => true,
@@ -154,21 +165,25 @@ class OfficialAuthController extends Controller
             'current_password' => ['required', 'string'],
             'password' => [
                 'required',
+                'confirmed',
                 Password::min(8),
             ],
         ]);
 
         $official = $request->user();
 
-        if (!Hash::check($validated['current_password'], $official->password)) {
+        if (!Hash::check(
+            $validated['current_password'],
+            $official->password
+        )) {
             throw ValidationException::withMessages([
                 'current_password' => ['Current password is incorrect.'],
             ]);
         }
 
-        $official->update([
-            'password' => $validated['password'],
-        ]);
+        // Password is automatically hashed by the model cast
+        $official->password = $validated['password'];
+        $official->save();
 
         return response()->json([
             'success' => true,
@@ -190,7 +205,7 @@ class OfficialAuthController extends Controller
     }
 
     /**
-     * Logout From All Devices
+     * Logout All Devices
      */
     public function logoutAll(Request $request): JsonResponse
     {

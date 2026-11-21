@@ -17,8 +17,8 @@ class Official extends Authenticatable
         'email',
         'phone',
         'municipality',
-        'ward',
-        'official_post',
+        'ward_no',
+        'designation',
         'password',
         'is_active',
     ];
