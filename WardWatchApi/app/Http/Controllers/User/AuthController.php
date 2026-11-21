@@ -17,13 +17,13 @@ class AuthController extends Controller
      * Register a new user and issue a Sanctum token.
      */
     public function register(Request $request): JsonResponse
-    {
+    { 
         $validated = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password'    => ['required', Password::defaults()],
         ]);
-dd("successfull check");
+
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
