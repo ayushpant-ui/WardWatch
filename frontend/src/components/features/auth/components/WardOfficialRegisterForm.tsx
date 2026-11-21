@@ -46,7 +46,7 @@ export default function WardOfficialRegisterForm() {
       setServerError('');
       setSubmitted(false);
 
-      await axios.post(`${API_BASE_URL}/officials/register`, data, {
+      await axios.post(`${API_BASE_URL}/official/register`, data, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
