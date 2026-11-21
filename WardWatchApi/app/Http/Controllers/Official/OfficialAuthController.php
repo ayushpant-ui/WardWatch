@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Official;
 
 use App\Http\Controllers\Controller;
-use App\Models\Official;
+use App\Models\Officials;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -46,7 +46,7 @@ class OfficialAuthController extends Controller
             // Create Official account
            // Create Official account using Eloquent save()
 
-            $official = new Official();
+            $official = new Officials();
             dd($official);
             $official->name = $validated['name'];
             $official->email = $validated['email'];
