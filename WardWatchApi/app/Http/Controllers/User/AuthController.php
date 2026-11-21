@@ -23,7 +23,7 @@ class AuthController extends Controller
             'email'       => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password'    => ['required', Password::defaults()],
         ]);
-
+dd("successfull check");
         $user = User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
