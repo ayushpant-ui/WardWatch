@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CITIZEN
+  WARD_ADMIN
+  MUNICIPAL_ADMIN
+}
+
+enum ComplaintCategory {
+  ROAD
+  WATER
+  ELECTRICITY
+  SANITATION
+  DRAINAGE
+  PUBLIC_PROPERTY
+  OTHER
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+}
+
+enum ProjectStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+}
+
+model Municipality {
+  id        Int      @id @default(autoincrement())
+  name      String
+  district  String?
+  province  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wards     Ward[]
+  users     User[]
+  projects  Project[]
+  budgets   Budget[]
+
+  @@unique([name, district])
+  @@index([district])
+}
+
+model Ward {
+  id             Int         @id @default(autoincrement())
+  wardNumber     Int
+  name           String?
+  municipalityId Int
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  municipality   Municipality @relation(fields: [municipalityId], references: [id], onDelete: Restrict)
+  users          User[]
+  complaints     Complaint[]
+  projects       Project[]
+  budgets        Budget[]
+
+  @@unique([municipalityId, wardNumber])
+  @@index([municipalityId])
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  passwordHash   String
+  role           UserRole  @default(CITIZEN)
+  isActive       Boolean   @default(true)
+  municipalityId Int?
+  wardId         Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  municipality   Municipality? @relation(fields: [municipalityId], references: [id], onDelete: SetNull)
+  ward           Ward?         @relation(fields: [wardId], references: [id], onDelete: SetNull)
+  complaints     Complaint[]
+  statusChanges  ComplaintHistory[]
+
+  @@index([role])
+  @@index([wardId])
+  @@index([municipalityId])
+}
+
+model Complaint {
+  id          Int               @id @default(autoincrement())
+  trackingCode String           @unique
+  title       String
+  description String
+  category    ComplaintCategory
+  status      ComplaintStatus   @default(SUBMITTED)
+  latitude    Float?
+  longitude   Float?
+  address     String?
+  photoUrl    String?
+  citizenId   Int
+  wardId      Int
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  citizen     User              @relation(fields: [citizenId], references: [id], onDelete: Restrict)
+  ward        Ward              @relation(fields: [wardId], references: [id], onDelete: Restrict)
+  history     ComplaintHistory[]
+
+  @@index([citizenId, createdAt])
+  @@index([wardId, status])
+  @@index([category])
+}
+
+model ComplaintHistory {
+  id          Int             @id @default(autoincrement())
+  complaintId Int
+  changedById Int?
+  oldStatus   ComplaintStatus?
+  newStatus   ComplaintStatus
+  remark      String?
+  createdAt   DateTime        @default(now())
+
+  complaint   Complaint       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  changedBy   User?           @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([complaintId, createdAt])
+}
+
+model Project {
+  id              Int           @id @default(autoincrement())
+  title           String
+  description     String?
+  implementingAgency String?
+  contractor      String?
+  allocatedBudget Decimal       @db.Decimal(14, 2)
+  progress        Int           @default(0)
+  status          ProjectStatus @default(PLANNED)
+  startDate       DateTime?
+  endDate         DateTime?
+  photoUrl        String?
+  municipalityId  Int
+  wardId          Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  municipality    Municipality  @relation(fields: [municipalityId], references: [id], onDelete: Restrict)
+  ward            Ward?         @relation(fields: [wardId], references: [id], onDelete: SetNull)
+
+  @@index([municipalityId, status])
+  @@index([wardId])
+}
+
+model BudgetCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  description String?
+  createdAt DateTime @default(now())
+
+  budgets   Budget[]
+}
+
+model Budget {
+  id             Int      @id @default(autoincrement())
+  fiscalYear     String
+  allocatedAmount Decimal @db.Decimal(14, 2)
+  spentAmount     Decimal @default(0) @db.Decimal(14, 2)
+  description    String?
+  categoryId     Int
+  municipalityId Int
+  wardId         Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category       BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  municipality   Municipality   @relation(fields: [municipalityId], references: [id], onDelete: Restrict)
+  ward           Ward?          @relation(fields: [wardId], references: [id], onDelete: SetNull)
+
+  @@index([municipalityId, fiscalYear])
+  @@index([wardId, fiscalYear])
+  @@index([categoryId])
+}
