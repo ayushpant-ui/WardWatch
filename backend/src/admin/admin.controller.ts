@@ -10,6 +10,7 @@ import {
   Put,
   Query,
   UseGuards,
+  Req
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -77,21 +78,20 @@ export class AdminController {
     return this.adminService.updateBudget(id, body);
   }
 
-  @Get('officials')
-  getOfficials() {
-    return this.adminService.getOfficials();
+@Get('officials')
+  getOfficials(@Req() req: { user?: { sub?: number } }) {
+    return this.adminService.getOfficials(req.user?.sub);
   }
 
-  @Patch('officials/:id/approve')
+@Patch('officials/:id/approve')
   approveOfficial(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.approveOfficial(id);
   }
 
-  @Delete('officials/:id/reject')
+@Delete('officials/:id/reject')
   rejectOfficial(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.rejectOfficial(id);
   }
-
   @Patch('officials/:id/status')
   updateOfficialStatus(
     @Param('id', ParseIntPipe) id: number,

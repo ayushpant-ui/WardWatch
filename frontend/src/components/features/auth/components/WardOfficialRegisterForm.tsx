@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
-import { CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import api from '@/lib/axios';
 import {
   MUNICIPALITY_OPTIONS,
   WARD_NUMBERS,
@@ -13,15 +14,13 @@ import {
   WardOfficialRegisterFormData,
 } from '../schemas/official-register.schema';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-
 export default function WardOfficialRegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [createdOfficial, setCreatedOfficial] = useState<{
+  const [submittedDetails, setSubmittedDetails] = useState<{
     name: string;
-    email: string;
+    municipality: string;
     ward_no: number;
   } | null>(null);
 
@@ -50,32 +49,12 @@ export default function WardOfficialRegisterForm() {
       setServerError('');
       setSubmitted(false);
 
-      // Retrieve Municipal Admin JWT token (adjust key if stored differently in your auth context)
-     const token =
-  typeof window !== 'undefined'
-    ? sessionStorage.getItem('accessToken') ||
-      localStorage.getItem('accessToken') ||
-      localStorage.getItem('token')
-    : null;
+      const response = await api.post('/officials/register', data);
 
-      if (!token) {
-        setServerError(
-          'Unauthorized: Only a logged-in Municipal Admin can register Ward Officials.'
-        );
-        return;
-      }
-
-      const response = await axios.post(`${API_BASE_URL}/admin/officials`, data, {
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setCreatedOfficial({
+      setSubmittedDetails({
         name: response.data?.official?.name || data.name,
-        email: response.data?.official?.email || data.email,
+        municipality:
+          response.data?.official?.municipality || data.municipality,
         ward_no: response.data?.official?.ward_no || data.ward_no,
       });
       setSubmitted(true);
@@ -84,13 +63,6 @@ export default function WardOfficialRegisterForm() {
       if (axios.isAxiosError(error)) {
         const responseData = error.response?.data;
         const status = error.response?.status;
-
-        if (status === 401 || status === 403) {
-          setServerError(
-            'Access denied. You must be logged in as a Municipal Admin to create Ward Official accounts.'
-          );
-          return;
-        }
 
         if ((status === 400 || status === 422) && responseData?.errors) {
           Object.entries(responseData.errors).forEach(([field, messages]) => {
@@ -106,7 +78,7 @@ export default function WardOfficialRegisterForm() {
 
         setServerError(
           responseData?.message ||
-            'Failed to create ward official account. Please check the details and try again.'
+            'Registration failed. Please check your details and try again.'
         );
       } else {
         setServerError('Unable to connect to the server. Please try again.');
@@ -117,33 +89,26 @@ export default function WardOfficialRegisterForm() {
   if (submitted) {
     return (
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-sm space-y-4">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <CheckCircle2 size={26} />
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-500">
+          <Clock size={26} />
         </div>
         <h2 className="text-xl font-bold text-foreground">
-          Ward Official Account Created
+          Verification Request Sent
         </h2>
         <p className="text-sm text-muted">
-          <strong>{createdOfficial?.name}</strong> ({createdOfficial?.email}) has
-          been registered and activated for{' '}
-          <strong>Ward {createdOfficial?.ward_no}</strong>.
+          Thank you, <strong>{submittedDetails?.name}</strong>. Your request for{' '}
+          <strong>
+            {submittedDetails?.municipality} — Ward {submittedDetails?.ward_no}
+          </strong>{' '}
+          is now listed under the Municipal Admin’s <strong>Officials</strong>{' '}
+          approval queue. You will be able to log in once approved.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => {
-              setSubmitted(false);
-              setCreatedOfficial(null);
-            }}
-            className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
-          >
-            Register Another Official
-          </button>
+        <div className="pt-2">
           <Link
-            href="/admin"
-            className="inline-flex items-center justify-center rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-background"
+            href="/officials/login"
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
           >
-            Back to Admin Dashboard
+            Go to Official Login
           </Link>
         </div>
       </div>
@@ -159,7 +124,7 @@ export default function WardOfficialRegisterForm() {
           <input
             {...register('name')}
             type="text"
-            placeholder="e.g., S. Karki"
+            placeholder="e.g., Ayush Pant"
             className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none transition focus:border-primary"
           />
           {errors.name && (
@@ -201,7 +166,7 @@ export default function WardOfficialRegisterForm() {
           </div>
         </div>
 
-        {/* Municipality & Ward No. (Limited 1 to 20) */}
+        {/* Municipality & Ward No. */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <label className="mb-1.5 block text-sm font-medium">
@@ -263,9 +228,7 @@ export default function WardOfficialRegisterForm() {
         {/* Password & Confirm Password */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">
-              Initial Password
-            </label>
+            <label className="mb-1.5 block text-sm font-medium">Password</label>
             <div className="relative">
               <input
                 {...register('password')}
@@ -326,17 +289,17 @@ export default function WardOfficialRegisterForm() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting && <Loader2 size={18} className="animate-spin" />}
-          {isSubmitting ? 'Creating Official Account...' : 'Create Ward Official Account'}
+          {isSubmitting ? 'Submitting Request...' : 'Register as Ward Official'}
         </button>
 
-        {/* Back Link */}
+        {/* Login Link */}
         <p className="text-center text-xs text-muted">
-          Manage existing ward officials in{' '}
+          Already approved?{' '}
           <Link
-            href="/admin"
+            href="/officials/login"
             className="font-semibold text-primary hover:underline"
           >
-            Municipal Admin Dashboard
+            Login here
           </Link>
         </p>
       </form>
