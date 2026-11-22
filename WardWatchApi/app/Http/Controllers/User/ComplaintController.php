@@ -46,6 +46,13 @@ class ComplaintController extends Controller
         $validated['people_affected'] = $validated['people_affected'] ?? 1;
 
         $complaint = Complaint::create($validated);
+        $complaint->timelines()->create([
+            'old_status' => null,
+            'new_status' => 'pending',
+            'remarks' => 'Complaint submitted successfully.',
+            'updated_by_id' => $request->user()->id,
+            'updated_by_type' => get_class($request->user()),
+        ]);
 
         return response()->json([
             'success' => true,

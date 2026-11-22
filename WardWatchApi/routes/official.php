@@ -3,6 +3,8 @@
 
 use App\Http\Controllers\Official\OfficialAuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ComplaintTimelineController;
+
 
 // Public routes
 Route::post('/register', [OfficialAuthController::class, 'register'])
@@ -31,3 +33,13 @@ Route::middleware(['auth:sanctum', 'token.role:official'])->group(function () {
     Route::post('/logout-all', [OfficialAuthController::class, 'logoutAll'])
         ->name('logout.all');
 });
+Route::middleware(['auth:sanctum', 'token.role:admin'])
+    ->prefix('complaints')
+    ->group(function () {
+
+        Route::get('/{complaint}/timeline',
+            [ComplaintTimelineController::class, 'index']);
+
+        Route::post('/{complaint}/timeline',
+            [ComplaintTimelineController::class, 'store']);
+    });
