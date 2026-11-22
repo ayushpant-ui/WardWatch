@@ -6,14 +6,14 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
-import { Building2, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import {
   loginSchema,
   LoginFormData,
 } from '@/components/features/auth/schemas/auth.schema';
-import { loginUser} from '@/components/features/auth/auth.api';
+import { loginUser } from '@/components/features/auth/auth.api';
 
-export default function OfficialsLoginPage() {
+export default function WardOfficialLoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -24,48 +24,43 @@ export default function OfficialsLoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       setServerError('');
-
       const response = await loginUser(data);
-      const { accessToken, id, name, email, role } = response;
 
-      if (role !== 'ward_admin') {
+      if (response.role !== 'ward_admin') {
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('user');
         setServerError(
-          'Access denied. This portal is restricted to approved Ward Officials.'
+          'Access denied. This portal is strictly for Municipal-provisioned Ward Officials.',
         );
         return;
       }
 
-      sessionStorage.setItem('accessToken', accessToken);
+      sessionStorage.setItem('accessToken', response.accessToken);
       sessionStorage.setItem(
         'user',
-        JSON.stringify({ id, name, email, role })
+        JSON.stringify({
+          id: response.id,
+          name: response.name,
+          email: response.email,
+          role: response.role,
+          municipality: response.municipality,
+          ward_no: response.ward_no,
+        }),
       );
 
-      router.push('/ward/overview');
+      router.push('/ward-admin');
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const responseData = error.response?.data;
-
-        if (responseData?.errors) {
-          const firstError = Object.values(responseData.errors)
-            .flat()
-            .find((msg) => typeof msg === 'string');
-          setServerError(firstError || 'Official login failed.');
-        } else {
-          setServerError(
-            responseData?.message ||
-              'Invalid credentials or your official account is still pending municipal approval.'
-          );
-        }
+        setServerError(
+          error.response?.data?.message ||
+            'Invalid official email or password.',
+        );
       } else {
         setServerError('Unable to connect to the server. Please try again.');
       }
@@ -84,55 +79,47 @@ export default function OfficialsLoginPage() {
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-8 shadow-sm space-y-6">
-          {/* Header */}
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary">
               <Building2 size={14} />
-              Ward Official Portal
+              Ward Office Portal
             </div>
             <h1 className="text-2xl font-bold tracking-tight">
               Ward Official Login
             </h1>
             <p className="text-xs text-muted">
-              Sign in with your approved official email to manage ward complaints, projects, and budgets.
+              Sign in with the official credentials issued by your Municipal Administrator to manage ward complaints and projects.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Official Email */}
             <div>
               <label className="mb-1.5 block text-sm font-medium">
-                Official Email Address
+                Official Email
               </label>
               <input
                 {...register('email')}
                 type="email"
-                placeholder="official@municipality.gov.np"
+                placeholder="ward4@bhimdatta.gov.np"
                 autoComplete="email"
                 className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary"
               />
               {errors.email && (
-                <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
-            {/* Password */}
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-sm font-medium">Password</label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
+              <label className="mb-1.5 block text-sm font-medium">
+                Password
+              </label>
               <div className="relative">
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder="Enter official password"
                   autoComplete="current-password"
                   className="w-full rounded-lg border border-border bg-background px-4 py-3 pr-12 text-sm outline-none transition focus:border-primary"
                 />
@@ -146,11 +133,12 @@ export default function OfficialsLoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
-            {/* Server / Approval Error */}
             {serverError && (
               <div
                 role="alert"
@@ -166,25 +154,9 @@ export default function OfficialsLoginPage() {
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               {isSubmitting && <Loader2 size={18} className="animate-spin" />}
-              {isSubmitting ? 'Signing in...' : 'Login as Ward Official'}
+              {isSubmitting ? 'Signing In...' : 'Sign In to Ward Console'}
             </button>
           </form>
-
-          {/* Link to your existing Officials Register Page */}
-          <div className="border-t border-border pt-4 text-center space-y-1.5">
-            <p className="text-xs text-muted">
-              New ward official?{' '}
-              <Link
-                href="/officials/register"
-                className="font-semibold text-primary hover:underline"
-              >
-                Request an official account
-              </Link>
-            </p>
-            <p className="text-[11px] text-muted">
-              Accounts remain inactive until approved by the Municipal Admin.
-            </p>
-          </div>
         </div>
       </div>
     </div>
