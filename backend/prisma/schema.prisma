@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  citizen
+  ward_admin
+  municipal_admin
+}
+
+enum AccountStatus {
+  pending
+  active
+  deactivated
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         UserRole      @default(citizen)
+  status       AccountStatus @default(active)
+  phone        String?
+  province     String?       @default("Bagmati")
+  district     String?       @default("Kathmandu")
+  municipality String?       @default("Kathmandu Metropolitan City")
+  wardNo       Int?          @map("ward_no")
+  designation  String?
+  lastLoginAt  DateTime?     @map("last_login_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  complaints   Complaint[]   @relation("CitizenComplaints")
+
+  @@map("users")
+}
+
+model Complaint {
+  id           Int                  @id @default(autoincrement())
+  title        String
+  category     String
+  description  String
+  province     String
+  district     String
+  municipality String
+  ward         String
+  status       String               @default("Submitted") // Submitted | Assigned | In progress | Resolved | Escalated
+  latitude     Float?
+  longitude    Float?
+  photoUrl     String?              @map("photo_url")
+  assignedTo   String?              @map("assigned_to")
+  dueDate      String?              @map("due_date")
+  isOverdue    Boolean              @default(false) @map("is_overdue")
+  citizenId    Int?                 @map("citizen_id")
+  citizen      User?                @relation("CitizenComplaints", fields: [citizenId], references: [id], onDelete: SetNull)
+  timeline     ComplaintTimeline[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+
+  @@map("complaints")
+}
+
+model ComplaintTimeline {
+  id          Int       @id @default(autoincrement())
+  complaintId Int       @map("complaint_id")
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  step        String
+  timestamp   String
+  completed   Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("complaint_timelines")
+}
+
+model Project {
+  id        Int      @id @default(autoincrement())
+  name      String
+  ward      String
+  progress  Int      @default(0)
+  status    String   @default("On track") // On track | Delayed | Completed
+  deadline  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model BudgetItem {
+  id        Int      @id @default(autoincrement())
+  ward      String
+  category  String
+  allocated Float
+  spent     Float    @default(0)
+  updatedBy String   @default("Municipal admin") @map("updated_by")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("budget_items")
+}
+
+model BudgetAuditLog {
+  id          Int      @id @default(autoincrement())
+  ward        String
+  category    String
+  description String
+  updatedBy   String   @map("updated_by")
+  date        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("budget_audit_logs")
+}
