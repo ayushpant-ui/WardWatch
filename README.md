@@ -27,4 +27,15 @@ Citizens in municipalities and rural municipalities across Nepal face problems s
 
 - Delayed responses without clear accountability.
 
-Traditional complaint systems often rely on paper forms and phone calls, making it difficult for citizens to monitor progress or know whether their problems have been addressed.
+Traditional systems often rely on paper forms and phone calls, making it difficult for citizens to monitor progress or know whether their problems have been addressed.
+Existing digital systems often lack transparency in public budget spending, project progress, contractor details, and responsible officials. Citizens also lack a unified platform to report local issues, track complaints, and monitor their resolution.
+
+# 💡 Our Solution
+
+Ward-Watch provides a centralized digital platform where citizens can report local issues and government officials can manage them efficiently.
+
+The platform follows Nepal's administrative hierarchy:
+
+Province → District → Municipality → Ward
+
+Ward-Watch provides separate dashboards for citizens, ward officials, and municipal administrators, along with a public transparency dashboard accessible to everyone. Citizens can track their complaints, view government responses, and monitor the complete development process, including budget allocation and expenditure, assigned contractors, project deadlines, and regular progress updates. This helps citizens verify whether projects are completed on time and within the allocated budget.
