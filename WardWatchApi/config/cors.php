@@ -5,9 +5,9 @@ return [
 
     'paths' => [
         'api/*',
-        'api/user/*',
-        'api/admin/*',
-        'api/official/*',
+        '/user/*',
+        '/admin/*',
+        '/official/*',
         'sanctum/csrf-cookie',
     ],
 
