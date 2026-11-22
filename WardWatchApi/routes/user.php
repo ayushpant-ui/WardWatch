@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\User\AuthController;
+use App\Http\Controllers\User\ComplaintController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -17,4 +18,17 @@ Route::middleware(['auth:sanctum', 'token.role:' . User::class . ',role:user'])-
     Route::put('/password', [AuthController::class, 'changePassword'])->name('password.update');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout.all');
+});
+
+Route::middleware('auth:sanctum')->prefix('complaints')->group(function () {
+
+    Route::post('/', [ComplaintController::class, 'store'])
+        ->name('complaints.store');
+
+    Route::get('/', [ComplaintController::class, 'index'])
+        ->name('complaints.index');
+
+    Route::get('/{complaint}', [ComplaintController::class, 'show'])
+        ->name('complaints.show');
+
 });
