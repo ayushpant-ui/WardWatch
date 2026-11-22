@@ -32,7 +32,11 @@ export class RegisterCitizenDto {
   @MinLength(8)
   password!: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(8)
-  password_confirmation!: string;
+  password_confirmation?: string;
+
+  @IsOptional()
+  @IsString()
+  passwordConfirmation?: string;
 }

@@ -38,7 +38,7 @@ export const loginUser = async (
   data: LoginPayload
 ): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>(
-    '/user/login',
+    '/login',
     data
   );
 

@@ -20,11 +20,11 @@ export class AuthService {
   ) {}
 
   async registerCitizen(dto: RegisterCitizenDto) {
-  if (dto.password !== dto.password_confirmation) {
-    throw new BadRequestException({
-      errors: { password_confirmation: ['Passwords do not match.'] },
-    });
-  }
+  // if (dto.password !== dto.password_confirmation) {
+  //   throw new BadRequestException({
+  //     errors: { password_confirmation: ['Passwords do not match.'] },
+  //   });
+  // }
 
   const existing = await this.prisma.user.findUnique({
     where: { email: dto.email },
@@ -76,11 +76,11 @@ export class AuthService {
 }
 
   async registerOfficial(dto: RegisterOfficialDto) {
-    if (dto.password !== dto.password_confirmation) {
-      throw new BadRequestException({
-        errors: { password_confirmation: ['Passwords do not match.'] },
-      });
-    }
+    // if (dto.password !== dto.password_confirmation) {
+    //   throw new BadRequestException({
+    //     errors: { password_confirmation: ['Passwords do not match.'] },
+    //   });
+    // }
 
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
