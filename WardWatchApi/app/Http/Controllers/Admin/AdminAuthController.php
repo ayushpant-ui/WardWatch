@@ -20,9 +20,9 @@ class AdminAuthController extends Controller
             $admin = Admin::where('email', $credentials['email'])->first();
 
             if (!$admin || !Hash::check($credentials['password'], $admin->password)) {
-                throw ValidationException::withMessages([
-                    'email' => ['The provided credentials are incorrect.'],
-                ]);
+                return response()->json([
+                'success' => false,
+                'message' => 'invalid credential'],203);
             }
 
             $token = $admin->createToken('admin-token')->plainTextToken;
