@@ -1,23 +1,16 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "types": ["node"],
     "esModuleInterop": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
-    "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
-    "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "types": ["vitest/globals", "node"]
+    "strictNullChecks": true
   }
 }

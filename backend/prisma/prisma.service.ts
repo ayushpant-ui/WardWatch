@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
-
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
@@ -13,16 +8,9 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
-
-    if (!connectionString) {
-      throw new Error('DATABASE_URL is missing.');
-    }
-
     const adapter = new PrismaPg({
-      connectionString,
+      connectionString: process.env.DATABASE_URL,
     });
-
     super({ adapter });
   }
 
