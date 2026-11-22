@@ -6,13 +6,8 @@ import { CreateComplaintDto } from './dto/create-complaint.dto';
 export class ComplaintsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll() {
-    const list = await this.prisma.complaint.findMany({
-      include: { timeline: { orderBy: { id: 'asc' } } },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return list.map((item) => ({
+  private formatComplaint(item: any) {
+    return {
       id: item.id,
       title: item.title,
       category: item.category,
@@ -30,12 +25,35 @@ export class ComplaintsService {
       latitude: item.latitude,
       longitude: item.longitude,
       photoUrl: item.photoUrl,
-      timeline: item.timeline.map((t) => ({
+      timeline: (item.timeline ?? []).map((t: any) => ({
         step: t.step,
         timestamp: t.timestamp,
         completed: t.completed,
       })),
-    }));
+    };
+  }
+
+  async findAll() {
+    const list = await this.prisma.complaint.findMany({
+      include: { timeline: { orderBy: { id: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return list.map((item) => this.formatComplaint(item));
+  }
+
+  async findByUser(citizenId: number) {
+    const list = await this.prisma.complaint.findMany({
+      where: {
+        citizenId,
+      },
+      include: { timeline: { orderBy: { id: 'asc' } } },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return list.map((item) => this.formatComplaint(item));
   }
 
   async create(dto: CreateComplaintDto, photoUrl?: string, citizenId?: number) {

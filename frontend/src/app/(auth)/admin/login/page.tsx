@@ -11,7 +11,7 @@ import {
   loginSchema,
   LoginFormData,
 } from '@/components/features/auth/schemas/auth.schema';
-import { loginUser } from '@/components/features/auth/auth.api';
+import { loginAdmin } from '@/components/features/auth/auth.api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,46 +30,77 @@ export default function AdminLoginPage() {
     },
   });
 
+  // const onSubmit = async (data: LoginFormData) => {
+  //   try {
+  //     setServerError('');
+
+  //     const response = await loginAdmin(data);
+  //     const { accessToken, id, name, email, role } = response;
+
+  //     if (role !== 'municipal_admin') {
+  //       setServerError(
+  //         'Unauthorized. Only Municipal Administrators can sign in through this portal.'
+  //       );
+  //       return;
+  //     }
+
+  //     sessionStorage.setItem('accessToken', accessToken);
+  //     sessionStorage.setItem(
+  //       'user',
+  //       JSON.stringify({ id, name, email, role })
+  //     );
+
+  //     router.push('/municipality/overview');
+  //   } catch (error) {
+  //     if (axios.isAxiosError(error)) {
+  //       const responseData = error.response?.data;
+
+  //       if (responseData?.errors) {
+  //         const firstError = Object.values(responseData.errors)
+  //           .flat()
+  //           .find((msg) => typeof msg === 'string');
+  //         setServerError(firstError || 'Admin authentication failed.');
+  //       } else {
+  //         setServerError(
+  //           responseData?.message || 'Invalid administrator email or password.'
+  //         );
+  //       }
+  //     } else {
+  //       setServerError('Unable to connect to the server. Please try again.');
+  //     }
+  //   }
+  // };
+
+
   const onSubmit = async (data: LoginFormData) => {
-    try {
-      setServerError('');
+  try {
+    setServerError('');
 
-      const response = await loginUser(data);
-      const { accessToken, id, name, email, role } = response;
+    const response = await loginAdmin(data);
+    const { accessToken, id, name, email, role } = response;
 
-      if (role !== 'municipal_admin') {
-        setServerError(
-          'Unauthorized. Only Municipal Administrators can sign in through this portal.'
-        );
-        return;
-      }
-
-      sessionStorage.setItem('accessToken', accessToken);
-      sessionStorage.setItem(
-        'user',
-        JSON.stringify({ id, name, email, role })
+    if (role !== 'municipal_admin') {
+      sessionStorage.removeItem('accessToken');
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      setServerError(
+        'Unauthorized. Only Municipal Administrators can sign in through this portal.'
       );
-
-      router.push('/municipality/overview');
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const responseData = error.response?.data;
-
-        if (responseData?.errors) {
-          const firstError = Object.values(responseData.errors)
-            .flat()
-            .find((msg) => typeof msg === 'string');
-          setServerError(firstError || 'Admin authentication failed.');
-        } else {
-          setServerError(
-            responseData?.message || 'Invalid administrator email or password.'
-          );
-        }
-      } else {
-        setServerError('Unable to connect to the server. Please try again.');
-      }
+      return;
     }
-  };
+
+    sessionStorage.setItem('accessToken', accessToken);
+    sessionStorage.setItem(
+      'user',
+      JSON.stringify({ id, name, email, role })
+    );
+
+    router.push('/municipality/overview');
+  } catch (error) {
+    // ... existing error handling
+  }
+};
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-center px-4 py-12">
@@ -152,7 +183,7 @@ export default function AdminLoginPage() {
                 {serverError}
               </div>
             )}
-
+             
             <button
               type="submit"
               disabled={isSubmitting}

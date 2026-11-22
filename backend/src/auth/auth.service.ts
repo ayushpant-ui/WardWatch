@@ -124,13 +124,24 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    // const user = await this.prisma.user.findUnique({
+    //   where: { email: dto.email },
+    // });
+    
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-
+  where: { email: dto.email.trim().toLowerCase() },
+});
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid email or password.');
     }
+
+    // if (!user){
+    //   throw new UnauthorizedException("not found");
+    // }
+    // else 
+    //   if(!(dto.password===user.password)){
+    //   throw new UnauthorizedException("Password mismatched");
+    //   }
 
     if (user.role === 'ward_admin' && user.status === 'pending') {
       throw new ForbiddenException(

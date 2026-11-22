@@ -51,10 +51,12 @@ export default function WardOfficialRegisterForm() {
       setSubmitted(false);
 
       // Retrieve Municipal Admin JWT token (adjust key if stored differently in your auth context)
-      const token =
-        typeof window !== 'undefined'
-          ? localStorage.getItem('accessToken') || localStorage.getItem('token')
-          : null;
+     const token =
+  typeof window !== 'undefined'
+    ? sessionStorage.getItem('accessToken') ||
+      localStorage.getItem('accessToken') ||
+      localStorage.getItem('token')
+    : null;
 
       if (!token) {
         setServerError(

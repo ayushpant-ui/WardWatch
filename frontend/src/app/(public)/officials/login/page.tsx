@@ -11,7 +11,7 @@ import {
   loginSchema,
   LoginFormData,
 } from '@/components/features/auth/schemas/auth.schema';
-import { loginUser } from '@/components/features/auth/auth.api';
+import { loginUser} from '@/components/features/auth/auth.api';
 
 export default function OfficialsLoginPage() {
   const router = useRouter();

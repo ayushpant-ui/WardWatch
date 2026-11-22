@@ -15,12 +15,19 @@ import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { RegisterOfficialDto } from '../auth/dto/register-official.dto';
+
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('municipal_admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  @Post('officials')
+  createOfficial(@Body() dto: RegisterOfficialDto) {
+    return this.adminService.createOfficial(dto);
+  }
 
   @Get('overview')
   getOverview(@Query('ward') ward?: string) {

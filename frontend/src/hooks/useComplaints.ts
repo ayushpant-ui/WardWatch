@@ -153,3 +153,43 @@ export function useComplaints() {
 
   return { complaints, loading, isFallback, createComplaint, refetch: loadComplaints };
 }
+// 'use client';
+
+// import { useCallback, useEffect, useState } from 'react';
+// import api from '@/lib/axios';
+
+// export function useComplaints() {
+//   const [complaints, setComplaints] = useState<any[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [isFallback, setIsFallback] = useState(false);
+
+//   const fetchComplaints = useCallback(async () => {
+//     try {
+//       setLoading(true);
+//       const response = await api.get('/complaints/my');
+//       const data = Array.isArray(response.data)
+//         ? response.data
+//         : response.data?.data ?? [];
+
+//       setComplaints(data);
+//       setIsFallback(false);
+//     } catch (error) {
+//       console.error('Failed to fetch user complaints:', error);
+//       setComplaints([]);
+//       setIsFallback(false);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     fetchComplaints();
+//   }, [fetchComplaints]);
+
+//   return {
+//     complaints,
+//     loading,
+//     isFallback,
+//     refetch: fetchComplaints,
+//   };
+// }

@@ -1,11 +1,66 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable,BadRequestException,
+  ConflictException, } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { RegisterOfficialDto } from '../auth/dto/register-official.dto';
 
 @Injectable()
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
+ 
+  async createOfficial(dto: RegisterOfficialDto) {
+  if (
+    dto.password_confirmation !== undefined &&
+    dto.password !== dto.password_confirmation
+  ) {
+    throw new BadRequestException({
+      errors: { password_confirmation: ['Passwords do not match.'] },
+    });
+  }
 
+  const normalizedEmail = dto.email.trim().toLowerCase();
+
+  const existing = await this.prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+  if (existing) {
+    throw new ConflictException({
+      errors: { email: ['An account with this official email already exists.'] },
+    });
+  }
+
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+  const official = await this.prisma.user.create({
+    data: {
+      name: dto.name,
+      email: normalizedEmail,
+      phone: dto.phone ?? null,
+      municipality: dto.municipality,
+      wardNo: dto.ward_no,
+      designation: dto.designation,
+      password: hashedPassword,
+      role: 'ward_admin',
+      status: 'active',
+    },
+  });
+
+  return {
+    message: 'Ward official account created and activated.',
+    official: {
+      id: official.id,
+      name: official.name,
+      email: official.email,
+      phone: official.phone,
+      municipality: official.municipality,
+      ward_no: official.wardNo,
+      designation: official.designation,
+      role: official.role,
+      status: official.status,
+    },
+  };
+}
+  
   async getOverview(ward?: string) {
     const where = ward ? { ward } : {};
     const [openComplaints, overdueComplaints, queue] = await Promise.all([
