@@ -1,4 +1,3 @@
-
 <?php
 
 return [
@@ -6,14 +5,17 @@ return [
     'paths' => [
         'api/*',
         'user/*',
-        'admin/*',
+        'auth/*',
         'official/*',
         'sanctum/csrf-cookie',
     ],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000'],
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://10.1.1.67:3000',
+    ],
 
     'allowed_origins_patterns' => [],
 
