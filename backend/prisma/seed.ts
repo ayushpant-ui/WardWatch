@@ -27,7 +27,6 @@ async function main() {
       designation: 'Chief Municipal Admin',
     },
   });
-
 }
 
 main()
