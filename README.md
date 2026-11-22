@@ -32,10 +32,104 @@ Existing digital systems often lack transparency in public budget spending, proj
 
 # 💡 Our Solution
 
-Ward-Watch provides a centralized digital platform where citizens can report local issues and government officials can manage them efficiently.
+- Ward-Watch provides a centralized digital platform where citizens can report local issues and government officials can manage them efficiently.
 
-The platform follows Nepal's administrative hierarchy:
+- The platform follows Nepal's administrative hierarchy:
 
-Province → District → Municipality → Ward
+- Province → District → Municipality → Ward
 
-Ward-Watch provides separate dashboards for citizens, ward officials, and municipal administrators, along with a public transparency dashboard accessible to everyone. Citizens can track their complaints, view government responses, and monitor the complete development process, including budget allocation and expenditure, assigned contractors, project deadlines, and regular progress updates. This helps citizens verify whether projects are completed on time and within the allocated budget.
+- Ward-Watch provides separate dashboards for citizens, ward officials, and municipal administrators, along with a public transparency dashboard accessible to everyone. Citizens can track their complaints, view government responses, and monitor the complete development process, including budget allocation and expenditure, assigned contractors, project deadlines, and regular progress updates. This helps citizens verify whether projects are completed on time and within the allocated budget.
+
+
+# ✨ Key Features
+
+## 👤 For Citizens
+
+- Secure registration and login.
+
+- Select province, district, municipality, and ward.
+
+- Submit complaints with category and description.
+
+- Upload photos as evidence.
+
+- Pin the exact complaint location on an interactive map.
+
+- Track complaints through a live status timeline.
+
+- Receive updates about complaint progress.
+
+
+## 🏢 For Ward Officials
+
+- Secure role-based admin dashboard.
+
+- View complaints submitted to their ward.
+
+- Assign and manage complaints.
+
+- Update complaint status:
+
+- Submitted ---> Assigned ---> In Progress --->Resolved
+
+- Upload proof of completed work like live Photo and live Short Videos
+
+- Manage ward development projects and budgets.
+
+- Automatically escalate overdue complaints to higher authorities.
+
+
+## 🏛️ For Municipal Administrators
+
+- Municipality-wide complaint management.
+
+- Monitor complaints across all wards.
+
+- Filter complaints by ward and category.
+
+- View ward performance rankings.
+
+- Monitor municipality-wide statistics.
+
+- Create and manage ward official accounts.
+
+
+## 🌍 Public Transparency Dashboard
+
+- No login required.
+
+- View ward-wise budget allocation and utilization.
+
+- Monitor development project progress.
+
+- Explore complaints through an interactive map.
+
+- Compare ward performance scores.
+ 
+- Track complaint resolution and overdue rates.
+
+
+## 📊 Ward Performance Score
+
+- Each ward receives a performance score based on:
+
+- Complaint resolution rate.
+
+- Overdue complaint rate.
+
+- Budget utilization.
+
+- This helps citizens understand how effectively their local government is performing.
+
+
+## 🖥️ Screenshots & Demo
+
+- Screenshots and a live demo will be added here as development progresses.
+
+- Citizen Dashboard
+
+- Admin Dashboard
+
+- Public Transparency Dashboard
+
+- Complaint Map
