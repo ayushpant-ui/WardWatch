@@ -7,9 +7,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterOfficialDto } from './dto/register-official.dto';
+import { RegisterCitizenDto } from './dto/register-citizen.dto';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,62 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
+
+  async registerCitizen(dto: RegisterCitizenDto) {
+  if (dto.password !== dto.password_confirmation) {
+    throw new BadRequestException({
+      errors: { password_confirmation: ['Passwords do not match.'] },
+    });
+  }
+
+  const existing = await this.prisma.user.findUnique({
+    where: { email: dto.email },
+  });
+  if (existing) {
+    throw new ConflictException({
+      errors: { email: ['An account with this email already exists.'] },
+    });
+  }
+
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
+  const wardNumber = dto.ward ? Number(dto.ward.replace(/\D/g, '')) || null : null;
+
+  const citizen = await this.prisma.user.create({
+    data: {
+      name: dto.name,
+      email: dto.email,
+      phone: dto.phone ?? null,
+      province: dto.province ?? 'Bagmati',
+      district: dto.district ?? 'Kathmandu',
+      municipality: dto.municipality ?? 'Kathmandu Metropolitan City',
+      wardNo: wardNumber,
+      password: hashedPassword,
+      role: 'citizen',
+      status: 'active',
+    },
+  });
+
+  const payload = {
+    sub: citizen.id,
+    email: citizen.email,
+    name: citizen.name,
+    role: citizen.role,
+    wardNo: citizen.wardNo,
+  };
+
+  const accessToken = await this.jwtService.signAsync(payload);
+
+  return {
+    message: 'Registration successful.',
+    accessToken,
+    id: citizen.id,
+    name: citizen.name,
+    email: citizen.email,
+    role: citizen.role,
+    municipality: citizen.municipality,
+    ward_no: citizen.wardNo,
+  };
+}
 
   async registerOfficial(dto: RegisterOfficialDto) {
     if (dto.password !== dto.password_confirmation) {

@@ -7,7 +7,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.setGlobalPrefix('api');
+  // app.setGlobalPrefix('api');
 
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -39,6 +39,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 8000;
   await app.listen(port);
-  console.log(`WardWatch NestJS API running on http://localhost:${port}/api`);
+  console.log(`WardWatch NestJS API running on http://localhost:${port}`);
 }
 bootstrap();
