@@ -16,7 +16,7 @@ class Admin extends Authenticatable
         'name',
         'email',
         'phone',
-        'municipality_id',
+        'municipality',
         'password',
         'is_active',
     ];
@@ -32,10 +32,5 @@ class Admin extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
-    }
-
-    public function municipality(): BelongsTo
-    {
-        return $this->belongsTo(Municipality::class);
     }
 }
