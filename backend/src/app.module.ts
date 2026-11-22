@@ -3,6 +3,9 @@ import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module';
+import { ComplaintsModule } from './complaints/complaints.module';
+import { TransparencyModule } from './transparency/transparency.module';
+import { AdminModule } from './admin/admin.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -17,6 +20,9 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
     AuthModule,
+    ComplaintsModule,
+    TransparencyModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],
