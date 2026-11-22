@@ -25,8 +25,8 @@ export interface Complaint {
   status: ComplaintStatus;
   filedAt: string;
   dueDate?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
   photoUrl?: string;
   timeline: TimelineEvent[];
 }

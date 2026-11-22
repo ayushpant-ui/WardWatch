@@ -50,8 +50,8 @@ model Complaint {
   municipality String
   ward         String
   status       String               @default("Submitted") // Submitted | Assigned | In progress | Resolved | Escalated
-  latitude     Float
-  longitude    Float
+  latitude     Float?
+  longitude    Float?
   photoUrl     String?              @map("photo_url")
   assignedTo   String?              @map("assigned_to")
   dueDate      String?              @map("due_date")

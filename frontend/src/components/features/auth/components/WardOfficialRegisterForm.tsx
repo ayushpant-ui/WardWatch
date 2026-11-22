@@ -13,13 +13,17 @@ import {
   WardOfficialRegisterFormData,
 } from '../schemas/official-register.schema';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
 
 export default function WardOfficialRegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [createdOfficial, setCreatedOfficial] = useState<{
+    name: string;
+    email: string;
+    ward_no: number;
+  } | null>(null);
 
   const {
     register,
@@ -46,20 +50,47 @@ export default function WardOfficialRegisterForm() {
       setServerError('');
       setSubmitted(false);
 
-      await axios.post(`${API_BASE_URL}/official/register`, data, {
+      // Retrieve Municipal Admin JWT token (adjust key if stored differently in your auth context)
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('accessToken') || localStorage.getItem('token')
+          : null;
+
+      if (!token) {
+        setServerError(
+          'Unauthorized: Only a logged-in Municipal Admin can register Ward Officials.'
+        );
+        return;
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/admin/officials`, data, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
 
+      setCreatedOfficial({
+        name: response.data?.official?.name || data.name,
+        email: response.data?.official?.email || data.email,
+        ward_no: response.data?.official?.ward_no || data.ward_no,
+      });
       setSubmitted(true);
       reset();
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const responseData = error.response?.data;
+        const status = error.response?.status;
 
-        if (error.response?.status === 422 && responseData?.errors) {
+        if (status === 401 || status === 403) {
+          setServerError(
+            'Access denied. You must be logged in as a Municipal Admin to create Ward Official accounts.'
+          );
+          return;
+        }
+
+        if ((status === 400 || status === 422) && responseData?.errors) {
           Object.entries(responseData.errors).forEach(([field, messages]) => {
             if (Array.isArray(messages) && messages.length > 0) {
               setError(field as keyof WardOfficialRegisterFormData, {
@@ -73,7 +104,7 @@ export default function WardOfficialRegisterForm() {
 
         setServerError(
           responseData?.message ||
-            'Registration failed. Please check your details and try again.'
+            'Failed to create ward official account. Please check the details and try again.'
         );
       } else {
         setServerError('Unable to connect to the server. Please try again.');
@@ -88,17 +119,31 @@ export default function WardOfficialRegisterForm() {
           <CheckCircle2 size={26} />
         </div>
         <h2 className="text-xl font-bold text-foreground">
-          Registration Request Submitted
+          Ward Official Account Created
         </h2>
         <p className="text-sm text-muted">
-          Your official account request has been sent to the Municipal Admin for verification. Your account will stay inactive until approved[cite: 14].
+          <strong>{createdOfficial?.name}</strong> ({createdOfficial?.email}) has
+          been registered and activated for{' '}
+          <strong>Ward {createdOfficial?.ward_no}</strong>.
         </p>
-        <Link
-          href="/officials/login"
-          className="mt-2 inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-        >
-          Go to Official Login
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setSubmitted(false);
+              setCreatedOfficial(null);
+            }}
+            className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
+          >
+            Register Another Official
+          </button>
+          <Link
+            href="/admin"
+            className="inline-flex items-center justify-center rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-background"
+          >
+            Back to Admin Dashboard
+          </Link>
+        </div>
       </div>
     );
   }
@@ -216,7 +261,9 @@ export default function WardOfficialRegisterForm() {
         {/* Password & Confirm Password */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Password</label>
+            <label className="mb-1.5 block text-sm font-medium">
+              Initial Password
+            </label>
             <div className="relative">
               <input
                 {...register('password')}
@@ -277,17 +324,17 @@ export default function WardOfficialRegisterForm() {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting && <Loader2 size={18} className="animate-spin" />}
-          {isSubmitting ? 'Submitting Request...' : 'Register as Ward Official'}
+          {isSubmitting ? 'Creating Official Account...' : 'Create Ward Official Account'}
         </button>
 
-        {/* Login Link */}
+        {/* Back Link */}
         <p className="text-center text-xs text-muted">
-          Already approved?{' '}
+          Manage existing ward officials in{' '}
           <Link
-            href="/officials/login"
+            href="/admin"
             className="font-semibold text-primary hover:underline"
           >
-            Login here
+            Municipal Admin Dashboard
           </Link>
         </p>
       </form>
