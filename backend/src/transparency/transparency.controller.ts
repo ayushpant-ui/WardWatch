@@ -62,16 +62,22 @@ export class TransparencyController {
 
     // BudgetItem and Project in schema.prisma don't have a municipality column yet,
     // so filter by ward (and optionally match municipality if prefixed in ward string)
-    const filteredBudgets = allBudgets.filter((b) => {
+const filteredBudgets = allBudgets.filter((b) => {
+      const matchesMuni =
+        selectedMunicipality === 'all' ||
+        (b.municipality ?? '').toLowerCase() === selectedMunicipality.toLowerCase();
       const matchesWard =
         !wardNumber || this.extractWardNumber(b.ward) === wardNumber;
-      return matchesWard;
+      return matchesMuni && matchesWard;
     });
 
-    const filteredProjects = allProjects.filter((p) => {
+const filteredProjects = allProjects.filter((p) => {
+      const matchesMuni =
+        selectedMunicipality === 'all' ||
+        (p.municipality ?? '').toLowerCase() === selectedMunicipality.toLowerCase();
       const matchesWard =
         !wardNumber || this.extractWardNumber(p.ward) === wardNumber;
-      return matchesWard;
+      return matchesMuni && matchesWard;
     });
 
     // Summary KPIs

@@ -88,7 +88,7 @@ export default function WardOfficialLoginPage() {
               Ward Official Login
             </h1>
             <p className="text-xs text-muted">
-              Sign in with the official credentials issued by your Municipal Administrator to manage ward complaints and projects.
+              Sign in with your approved official credentials to manage ward complaints and projects.
             </p>
           </div>
 
@@ -156,6 +156,16 @@ export default function WardOfficialLoginPage() {
               {isSubmitting && <Loader2 size={18} className="animate-spin" />}
               {isSubmitting ? 'Signing In...' : 'Sign In to Ward Console'}
             </button>
+
+            <p className="pt-1 text-center text-xs text-muted">
+              New ward official?{' '}
+              <Link
+                href="/officials/register"
+                className="font-semibold text-primary hover:underline"
+              >
+                Register for verification
+              </Link>
+            </p>
           </form>
         </div>
       </div>

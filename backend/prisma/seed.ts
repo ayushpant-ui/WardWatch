@@ -9,8 +9,9 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const adminPassword = await bcrypt.hash('Admin@12345', 10);
+  //ayushpant@2073.gov.np  --- Kathmandu Metro Municaipality
   const admin = await prisma.user.upsert({
-    where: { email: 'ayushpant@2073.gov.np' },
+    where: { email: 'ayushpant@2074.gov.np' },
     update: {
       password:adminPassword,
       role: 'municipal_admin',
@@ -18,15 +19,16 @@ async function main() {
     },
     create: {
       name: 'Municipal Administrator',
-      email: 'ayushpant@2073.gov.np',
+      email: 'ayushpant@2074.gov.np',
       password:adminPassword,
       role: 'municipal_admin',
       status: 'active',
-      municipality: 'Kathmandu Metropolitan City',
+      municipality: 'Bhimdatta Municipality',
       designation: 'Chief Municipal Admin',
     },
   });
 }
+
 
 main()
   .catch((e) => {
