@@ -22,23 +22,31 @@ export default function MunicipalityOverviewPage() {
 
   const { stats, queue, ranking } = useAdminOverview(selectedWard);
 
-  useEffect(() => {
-    const rawUser =
-      sessionStorage.getItem('user') || localStorage.getItem('user');
-    if (rawUser) {
-      try {
-        const user = JSON.parse(rawUser);
-        if (user?.municipality) {
-          setMunicipalityName(user.municipality);
-          setWardCount(
-            user.municipality.toLowerCase().includes('bhimdatta') ? 19 : 32,
-          );
-        }
-      } catch {
-        // ignore invalid JSON
-      }
+useEffect(() => {
+  const rawUser =
+    sessionStorage.getItem('user') || localStorage.getItem('user');
+  if (!rawUser) return;
+
+  try {
+    const parsed = JSON.parse(rawUser);
+    console.log('Stored user payload:', parsed); // Check actual shape in DevTools
+
+    // Handle flat or nested user object, and string or object municipality
+    const userObj = parsed?.user ?? parsed;
+    const rawMuni =
+      typeof userObj?.municipality === 'string'
+        ? userObj.municipality
+        : userObj?.municipality?.name || userObj?.municipalityName;
+
+    if (rawMuni) {
+      setMunicipalityName(rawMuni);
+      const isBhimdatta = /bhimd[au]tta|भीमदत्त/i.test(rawMuni);
+      setWardCount(isBhimdatta ? 19 : 32);
     }
-  }, []);
+  } catch (err) {
+    console.error('Failed to parse user from storage:', err);
+  }
+}, []);
 
   // Any issue > 7 days old is auto-marked status === 'Escalated' by the backend
   const escalatedIssues = queue.filter((q) => q.status === 'Escalated');
