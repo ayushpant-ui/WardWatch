@@ -141,7 +141,7 @@ Existing digital systems often lack transparency in public budget spending, proj
 | Ayush Pant |  Developer |Fronted/Backend Developement |
 | Yogesh Pant | Developer |Backend Developement |
 | Bibek Chand | Researcher/Designer|UI/UX/Presentation Designer |
-| Ganesh Bhatt | Research|Documnetation|
+| Ganesh Bhatt | Research|Documentation|
 
 
 ## 🛠️ Tech Stack
