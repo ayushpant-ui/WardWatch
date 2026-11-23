@@ -80,6 +80,7 @@ model ComplaintTimeline {
 model Project {
   id           Int      @id @default(autoincrement())
   name         String
+  Amount       Int      @default(0)
   municipality String   @default("Bhimdatta Municipality")
   ward         String
   progress     Int      @default(0)

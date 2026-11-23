@@ -6,10 +6,12 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterOfficialDto } from '../auth/dto/register-official.dto';
+import { ComplaintsService } from '../complaints/complaints.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,private readonly complaintsService:ComplaintsService) {}
+
 
   async createOfficial(dto: RegisterOfficialDto) {
     if (
@@ -66,29 +68,71 @@ export class AdminService {
     };
   }
 
-  async getOverview(ward?: string) {
-    const where = ward ? { ward } : {};
-    const [openComplaints, overdueComplaints, queue] = await Promise.all([
+ async getOverview(adminUserId?: number, ward?: string) {
+    await this.complaintsService.autoEscalateOverdueComplaints();
+
+    let adminMunicipality: string | null = null;
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      adminMunicipality = admin?.municipality ?? null;
+    }
+
+    const baseWhere: any = {
+      ...(adminMunicipality
+        ? {
+            municipality: {
+              equals: adminMunicipality,
+              mode: 'insensitive',
+            },
+          }
+        : {}),
+      ...(ward ? { ward } : {}),
+    };
+
+    const [
+      openComplaints,
+      overdueComplaints,
+      escalatedCount,
+      queue,
+      escalatedQueue,
+    ] = await Promise.all([
       this.prisma.complaint.count({
-        where: { ...where, status: { not: 'Resolved' } },
+        where: { ...baseWhere, status: { not: 'Resolved' } },
       }),
       this.prisma.complaint.count({
-        where: { ...where, isOverdue: true },
+        where: { ...baseWhere, isOverdue: true },
+      }),
+      this.prisma.complaint.count({
+        where: { ...baseWhere, status: 'Escalated' },
       }),
       this.prisma.complaint.findMany({
-        where,
+        where: baseWhere,
         take: 10,
         orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.complaint.findMany({
+        where: { ...baseWhere, status: 'Escalated' },
+        include: {
+          timeline: { orderBy: { id: 'asc' } },
+          citizen: { select: { name: true, phone: true } },
+        },
+        orderBy: { createdAt: 'asc' }, // Oldest overdue issues first
       }),
     ]);
 
     return {
+      municipality: adminMunicipality ?? 'All Municipalities',
       stats: {
         openComplaints,
         overdueComplaints,
+        escalatedComplaints: escalatedCount,
         avgResolutionDays: 4.1,
         municipalityScore: 71,
       },
+      escalatedQueue,
       queue,
       ranking: [
         { ward: 'Ward 10', score: 78 },
@@ -113,31 +157,80 @@ export class AdminService {
     });
   }
 
-  getProjects() {
-    return this.prisma.project.findMany({ orderBy: { id: 'desc' } });
+async getProjects(adminUserId?: number) {
+    let adminMunicipality: string | null = null;
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      adminMunicipality = admin?.municipality ?? null;
+    }
+
+    return this.prisma.project.findMany({
+      where: adminMunicipality
+        ? {
+            municipality: {
+              equals: adminMunicipality,
+              mode: 'insensitive',
+            },
+          }
+        : undefined,
+      orderBy: { id: 'desc' },
+    });
   }
 
-  createProject(data: {
-    name: string;
-    ward: string;
-    progress: number;
-    status: string;
-    deadline: string;
-  }) {
-    return this.prisma.project.create({ data });
+  async createProject(
+    data: {
+      name: string;
+      ward: string;
+      budget?: number;
+      progress: number;
+      status: string;
+      deadline: string;
+    },
+    adminUserId?: number,
+  ) {
+    let municipality = 'Bhimdatta Municipality';
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      if (admin?.municipality) municipality = admin.municipality;
+    }
+
+    return this.prisma.project.create({
+      data: {
+        name: data.name,
+        municipality,
+        ward: data.ward,
+        budget: Number(data.budget ?? 0),
+        progress: Number(data.progress ?? 0),
+        status: data.status,
+        deadline: data.deadline,
+      },
+    });
   }
 
-  updateProject(
+updateProject(
     id: number,
     data: Partial<{
       name: string;
       ward: string;
+      budget: number;
       progress: number;
       status: string;
       deadline: string;
     }>,
   ) {
-    return this.prisma.project.update({ where: { id }, data });
+    return this.prisma.project.update({
+      where: { id },
+      data: {
+        ...data,
+        ...(data.budget !== undefined ? { budget: Number(data.budget) } : {}),
+      },
+    });
   }
 
   async getBudgets() {

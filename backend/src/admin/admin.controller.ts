@@ -30,11 +30,11 @@ export class AdminController {
     return this.adminService.createOfficial(dto);
   }
 
-  @Get('overview')
-  getOverview(@Query('ward') ward?: string) {
-    return this.adminService.getOverview(ward);
+@Get('overview')
+  getOverview(@Req() req: any, @Query('ward') ward?: string) {
+    return this.adminService.getOverview(req.user?.sub, ward);
   }
-
+  
   @Get('complaints')
   getComplaints() {
     return this.adminService.getAllComplaints();
