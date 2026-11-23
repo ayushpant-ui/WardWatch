@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowUpRight,
   Building2,
   CheckCircle2,
   FileSpreadsheet,
   FolderKanban,
   Loader2,
   ShieldAlert,
+  X,
 } from 'lucide-react';
 import {
   getTransparencyData,
@@ -37,6 +39,11 @@ export default function TransparencyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Modal & scroll states for KPI cards
+  const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [projectStatusFilter, setProjectStatusFilter] = useState<string>('All');
+  const issuesSectionRef = useRef<HTMLDivElement | null>(null);
+
   const activeMuniConfig =
     MUNICIPALITIES.find((m) => m.value === selectedMunicipality) ??
     MUNICIPALITIES[0];
@@ -47,7 +54,7 @@ export default function TransparencyPage() {
 
   const handleMunicipalityChange = (newMunicipality: string) => {
     setSelectedMunicipality(newMunicipality);
-    setSelectedWard('all'); // Reset ward filter when changing municipality
+    setSelectedWard('all');
   };
 
   useEffect(() => {
@@ -90,7 +97,6 @@ export default function TransparencyPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Municipality Filter */}
           <div className="flex items-center gap-2">
             <label
               htmlFor="municipality-filter"
@@ -112,7 +118,6 @@ export default function TransparencyPage() {
             </select>
           </div>
 
-          {/* Ward Filter */}
           <div className="flex items-center gap-2">
             <label
               htmlFor="ward-filter"
@@ -166,6 +171,15 @@ export default function TransparencyPage() {
           ? payload.recentComplaints
           : [];
 
+        const modalProjects =
+          projectStatusFilter === 'All'
+            ? projects
+            : projects.filter(
+                (p: any) =>
+                  (p.status ?? '').toLowerCase() ===
+                  projectStatusFilter.toLowerCase(),
+              );
+
         return (
           <>
             {/* KPI Summary Strip */}
@@ -184,20 +198,40 @@ export default function TransparencyPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card p-5">
+              {/* Clickable Development Projects Card */}
+              <button
+                type="button"
+                onClick={() => {
+                  setProjectStatusFilter('All');
+                  setShowProjectsModal(true);
+                }}
+                className="group text-left rounded-2xl border border-border bg-card p-5 transition hover:border-primary hover:bg-primary/5 cursor-pointer"
+              >
                 <div className="flex items-center justify-between text-xs text-muted">
-                  <span>Development Projects</span>
-                  <FolderKanban size={16} className="text-primary" />
+                  <span className="group-hover:text-primary transition-colors">
+                    Development Projects
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-primary">
+                    <FolderKanban size={16} />
+                    <ArrowUpRight size={14} />
+                  </span>
                 </div>
                 <p className="mt-2 text-xl font-bold">
                   {summary.totalProjects ?? 0}
                 </p>
-                <p className="mt-1 text-xs text-muted">
-                  Active & completed ward works
+                <p className="mt-1 text-xs text-primary font-medium">
+                  Click to view all projects →
                 </p>
-              </div>
+              </button>
 
-              <div className="rounded-2xl border border-border bg-card p-5">
+              {/* Clickable Public Issues Card */}
+              <button
+                type="button"
+                onClick={() =>
+                  issuesSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+                }
+                className="group text-left rounded-2xl border border-border bg-card p-5 transition hover:border-amber-500/60 hover:bg-amber-500/5 cursor-pointer"
+              >
                 <div className="flex items-center justify-between text-xs text-muted">
                   <span>Public Issues Logged</span>
                   <ShieldAlert size={16} className="text-amber-500" />
@@ -208,7 +242,7 @@ export default function TransparencyPage() {
                 <p className="mt-1 text-xs text-muted">
                   {summary.resolvedComplaints ?? 0} resolved
                 </p>
-              </div>
+              </button>
 
               <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="flex items-center justify-between text-xs text-muted">
@@ -283,11 +317,26 @@ export default function TransparencyPage() {
             </div>
 
             {/* Bottom Split: Public Projects & Recent Civic Issues */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div
+              ref={issuesSectionRef}
+              className="grid grid-cols-1 gap-6 lg:grid-cols-2"
+            >
               <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
-                <h2 className="text-lg font-semibold">
-                  Ward Development Projects
-                </h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">
+                    Ward Development Projects
+                  </h2>
+                  {projects.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowProjectsModal(true)}
+                      className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      Expand All ({projects.length})
+                    </button>
+                  )}
+                </div>
+
                 {projects.length === 0 ? (
                   <p className="text-sm text-muted">
                     No projects published for this selection.
@@ -362,6 +411,118 @@ export default function TransparencyPage() {
                 )}
               </div>
             </div>
+
+            {/* Development Projects Modal */}
+            {showProjectsModal && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+                onClick={() => setShowProjectsModal(false)}
+              >
+                <div
+                  className="w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-xl space-y-5 max-h-[85vh] flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+                    <div>
+                      <span className="text-xs font-semibold text-primary">
+                        {activeMuniConfig.label}
+                        {selectedWard !== 'all' ? ` • Ward ${selectedWard}` : ''}
+                      </span>
+                      <h3 className="text-xl font-bold mt-0.5">
+                        Development Projects ({projects.length})
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowProjectsModal(false)}
+                      aria-label="Close modal"
+                      className="rounded-lg p-1.5 text-muted hover:bg-secondary hover:text-foreground cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {/* Status Filter Tabs */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['All', 'On track', 'Delayed', 'Completed'] as const).map(
+                      (tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => setProjectStatusFilter(tab)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer ${
+                            projectStatusFilter === tab
+                              ? 'bg-primary text-white font-semibold'
+                              : 'bg-secondary text-muted hover:text-foreground'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      ),
+                    )}
+                  </div>
+
+                  {/* Scrollable Project List */}
+                  <div className="overflow-y-auto space-y-3 pr-1">
+                    {modalProjects.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
+                        No development projects found under "{projectStatusFilter}".
+                      </div>
+                    ) : (
+                      modalProjects.map((project: any) => (
+                        <div
+                          key={project.id}
+                          className="rounded-xl border border-border bg-background p-4 space-y-2.5"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {project.title}
+                              </p>
+                              <p className="text-xs text-muted mt-0.5">
+                                Ward {project.wardNo} • Target Deadline:{' '}
+                                <strong>{project.deadline}</strong>
+                              </p>
+                            </div>
+                            <span
+                              className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                project.status === 'Completed'
+                                  ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                                  : project.status === 'Delayed'
+                                  ? 'bg-red-500/15 text-red-600 dark:text-red-400'
+                                  : 'bg-primary/15 text-primary'
+                              }`}
+                            >
+                              {project.status}
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted">
+                              <span>Completion Progress</span>
+                              <span className="font-semibold text-foreground">
+                                {project.progress ?? 0}%
+                              </span>
+                            </div>
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                              <div
+                                className="h-full bg-primary transition-all"
+                                style={{
+                                  width: `${Math.min(
+                                    project.progress ?? 0,
+                                    100,
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         );
       })()}

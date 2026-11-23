@@ -113,7 +113,7 @@ export default function BudgetFormModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted">
-                Allocated (Rs Millions)
+                Allocated (NRs)
               </label>
               <input
                 type="number"
@@ -125,7 +125,7 @@ export default function BudgetFormModal({
 
             <div>
               <label className="mb-1 block text-xs font-medium text-muted">
-                Spent (Rs Millions)
+                Spent (NRs)
               </label>
               <input
                 type="number"

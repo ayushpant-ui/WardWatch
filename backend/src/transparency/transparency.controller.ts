@@ -54,28 +54,40 @@ export class TransparencyController {
     const filteredComplaints = complaints.filter((c) => {
       const matchesMuni =
         selectedMunicipality === 'all' ||
-        (c.municipality ?? '').toLowerCase() === selectedMunicipality.toLowerCase();
+        (c.municipality ?? '').toLowerCase() ===
+          selectedMunicipality.toLowerCase();
       const matchesWard =
         !wardNumber || this.extractWardNumber(c.ward) === wardNumber;
       return matchesMuni && matchesWard;
     });
 
-    // BudgetItem and Project in schema.prisma don't have a municipality column yet,
-    // so filter by ward (and optionally match municipality if prefixed in ward string)
+    // Filter budgets by municipality & ward
     const filteredBudgets = allBudgets.filter((b) => {
+      const matchesMuni =
+        selectedMunicipality === 'all' ||
+        (b.municipality ?? '').toLowerCase() ===
+          selectedMunicipality.toLowerCase();
       const matchesWard =
         !wardNumber || this.extractWardNumber(b.ward) === wardNumber;
-      return matchesWard;
+      return matchesMuni && matchesWard;
     });
 
+    // Filter projects by municipality & ward
     const filteredProjects = allProjects.filter((p) => {
+      const matchesMuni =
+        selectedMunicipality === 'all' ||
+        (p.municipality ?? '').toLowerCase() ===
+          selectedMunicipality.toLowerCase();
       const matchesWard =
         !wardNumber || this.extractWardNumber(p.ward) === wardNumber;
-      return matchesWard;
+      return matchesMuni && matchesWard;
     });
 
     // Summary KPIs
-    const totalAllocated = filteredBudgets.reduce((sum, b) => sum + b.allocated, 0);
+    const totalAllocated = filteredBudgets.reduce(
+      (sum, b) => sum + b.allocated,
+      0,
+    );
     const totalSpent = filteredBudgets.reduce((sum, b) => sum + b.spent, 0);
     const totalComplaints = filteredComplaints.length;
     const resolvedComplaints = filteredComplaints.filter(
@@ -167,7 +179,9 @@ export class TransparencyController {
         totalAllocated,
         totalSpent,
         utilizationRate:
-          totalAllocated > 0 ? Math.round((totalSpent / totalAllocated) * 100) : 0,
+          totalAllocated > 0
+            ? Math.round((totalSpent / totalAllocated) * 100)
+            : 0,
         totalProjects: filteredProjects.length,
         totalComplaints,
         resolvedComplaints,
@@ -177,7 +191,10 @@ export class TransparencyController {
       projects: filteredProjects.map((p) => ({
         id: p.id,
         title: p.name,
+        municipality: p.municipality,
         wardNo: this.extractWardNumber(p.ward),
+        budget: p.Amount,
+        Amount: p.Amount,
         deadline: p.deadline,
         progress: p.progress,
         status: p.status,

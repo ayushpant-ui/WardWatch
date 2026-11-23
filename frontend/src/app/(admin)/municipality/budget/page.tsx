@@ -51,13 +51,13 @@ export default function MunicipalityBudgetPage() {
         <div className="rounded-2xl border border-border bg-card p-5">
           <p className="text-xs font-medium text-muted">Allocated</p>
           <p className="mt-2 text-3xl font-bold">
-            Rs {totals.allocated.toFixed(1)}M
+            NRs {totals.allocated.toFixed(1)}
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5">
           <p className="text-xs font-medium text-muted">Spent</p>
           <p className="mt-2 text-3xl font-bold text-primary">
-            Rs {totals.spent.toFixed(1)}M
+            NRs {totals.spent.toFixed(1)}
           </p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5">
@@ -91,8 +91,8 @@ export default function MunicipalityBudgetPage() {
                   <tr key={row.id}>
                     <td className="py-4 font-semibold">{row.ward}</td>
                     <td className="py-4 text-muted">{row.category}</td>
-                    <td className="py-4">Rs {row.allocated.toFixed(1)}M</td>
-                    <td className="py-4">Rs {row.spent.toFixed(1)}M</td>
+                    <td className="py-4">NRs {row.allocated.toFixed(1)}</td>
+                    <td className="py-4">NRs {row.spent.toFixed(1)}</td>
                     <td className="py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-2 w-24 rounded-full bg-secondary overflow-hidden">

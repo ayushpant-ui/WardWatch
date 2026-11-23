@@ -78,39 +78,43 @@ model ComplaintTimeline {
 }
 
 model Project {
-  id        Int      @id @default(autoincrement())
-  name      String
-  ward      String
-  progress  Int      @default(0)
-  status    String   @default("On track") // On track | Delayed | Completed
-  deadline  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  name         String
+  Amount       Int      @default(0)
+  municipality String   @default("Bhimdatta Municipality")
+  ward         String
+  progress     Int      @default(0)
+  status       String   @default("On track") // On track | Delayed | Completed
+  deadline     String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("projects")
 }
 
 model BudgetItem {
-  id        Int      @id @default(autoincrement())
-  ward      String
-  category  String
-  allocated Float
-  spent     Float    @default(0)
-  updatedBy String   @default("Municipal admin") @map("updated_by")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  municipality String   @default("Bhimdatta Municipality")
+  ward         String
+  category     String
+  allocated    Float
+  spent        Float    @default(0)
+  updatedBy    String   @default("Municipal admin") @map("updated_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("budget_items")
 }
 
 model BudgetAuditLog {
-  id          Int      @id @default(autoincrement())
-  ward        String
-  category    String
-  description String
-  updatedBy   String   @map("updated_by")
-  date        String
-  createdAt   DateTime @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  municipality String   @default("Bhimdatta Municipality")
+  ward         String
+  category     String
+  description  String
+  updatedBy    String   @map("updated_by")
+  date         String
+  createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("budget_audit_logs")
 }

@@ -1,89 +1,138 @@
-import { Injectable,BadRequestException,
-  ConflictException, } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterOfficialDto } from '../auth/dto/register-official.dto';
+import { ComplaintsService } from '../complaints/complaints.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
- 
+  constructor(private readonly prisma: PrismaService,private readonly complaintsService:ComplaintsService) {}
+
+
   async createOfficial(dto: RegisterOfficialDto) {
-  if (
-    dto.password_confirmation !== undefined &&
-    dto.password !== dto.password_confirmation
-  ) {
-    throw new BadRequestException({
-      errors: { password_confirmation: ['Passwords do not match.'] },
+    if (
+      dto.password_confirmation !== undefined &&
+      dto.password !== dto.password_confirmation
+    ) {
+      throw new BadRequestException({
+        errors: { password_confirmation: ['Passwords do not match.'] },
+      });
+    }
+
+    const normalizedEmail = dto.email.trim().toLowerCase();
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
     });
+    if (existing) {
+      throw new ConflictException({
+        errors: {
+          email: ['An account with this official email already exists.'],
+        },
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const official = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: normalizedEmail,
+        phone: dto.phone ?? null,
+        municipality: dto.municipality,
+        wardNo: dto.ward_no,
+        designation: dto.designation,
+        password: hashedPassword,
+        role: 'ward_admin',
+        status: 'active',
+      },
+    });
+
+    return {
+      message: 'Ward official account created and activated.',
+      official: {
+        id: official.id,
+        name: official.name,
+        email: official.email,
+        phone: official.phone,
+        municipality: official.municipality,
+        ward_no: official.wardNo,
+        designation: official.designation,
+        role: official.role,
+        status: official.status,
+      },
+    };
   }
 
-  const normalizedEmail = dto.email.trim().toLowerCase();
+ async getOverview(adminUserId?: number, ward?: string) {
+    await this.complaintsService.autoEscalateOverdueComplaints();
 
-  const existing = await this.prisma.user.findUnique({
-    where: { email: normalizedEmail },
-  });
-  if (existing) {
-    throw new ConflictException({
-      errors: { email: ['An account with this official email already exists.'] },
-    });
-  }
+    let adminMunicipality: string | null = null;
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      adminMunicipality = admin?.municipality ?? null;
+    }
 
-  const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const baseWhere: any = {
+      ...(adminMunicipality
+        ? {
+            municipality: {
+              equals: adminMunicipality,
+              mode: 'insensitive',
+            },
+          }
+        : {}),
+      ...(ward ? { ward } : {}),
+    };
 
-  const official = await this.prisma.user.create({
-    data: {
-      name: dto.name,
-      email: normalizedEmail,
-      phone: dto.phone ?? null,
-      municipality: dto.municipality,
-      wardNo: dto.ward_no,
-      designation: dto.designation,
-      password: hashedPassword,
-      role: 'ward_admin',
-      status: 'active',
-    },
-  });
-
-  return {
-    message: 'Ward official account created and activated.',
-    official: {
-      id: official.id,
-      name: official.name,
-      email: official.email,
-      phone: official.phone,
-      municipality: official.municipality,
-      ward_no: official.wardNo,
-      designation: official.designation,
-      role: official.role,
-      status: official.status,
-    },
-  };
-}
-  
-  async getOverview(ward?: string) {
-    const where = ward ? { ward } : {};
-    const [openComplaints, overdueComplaints, queue] = await Promise.all([
+    const [
+      openComplaints,
+      overdueComplaints,
+      escalatedCount,
+      queue,
+      escalatedQueue,
+    ] = await Promise.all([
       this.prisma.complaint.count({
-        where: { ...where, status: { not: 'Resolved' } },
+        where: { ...baseWhere, status: { not: 'Resolved' } },
       }),
       this.prisma.complaint.count({
-        where: { ...where, isOverdue: true },
+        where: { ...baseWhere, isOverdue: true },
+      }),
+      this.prisma.complaint.count({
+        where: { ...baseWhere, status: 'Escalated' },
       }),
       this.prisma.complaint.findMany({
-        where,
+        where: baseWhere,
         take: 10,
         orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.complaint.findMany({
+        where: { ...baseWhere, status: 'Escalated' },
+        include: {
+          timeline: { orderBy: { id: 'asc' } },
+          citizen: { select: { name: true, phone: true } },
+        },
+        orderBy: { createdAt: 'asc' }, // Oldest overdue issues first
       }),
     ]);
 
     return {
+      municipality: adminMunicipality ?? 'All Municipalities',
       stats: {
         openComplaints,
         overdueComplaints,
+        escalatedComplaints: escalatedCount,
         avgResolutionDays: 4.1,
         municipalityScore: 71,
       },
+      escalatedQueue,
       queue,
       ranking: [
         { ward: 'Ward 10', score: 78 },
@@ -108,18 +157,61 @@ export class AdminService {
     });
   }
 
-  getProjects() {
-    return this.prisma.project.findMany({ orderBy: { id: 'desc' } });
+async getProjects(adminUserId?: number) {
+    let adminMunicipality: string | null = null;
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      adminMunicipality = admin?.municipality ?? null;
+    }
+
+    return this.prisma.project.findMany({
+      where: adminMunicipality
+        ? {
+            municipality: {
+              equals: adminMunicipality,
+              mode: 'insensitive',
+            },
+          }
+        : undefined,
+      orderBy: { id: 'desc' },
+    });
   }
 
-  createProject(data: {
-    name: string;
-    ward: string;
-    progress: number;
-    status: string;
-    deadline: string;
-  }) {
-    return this.prisma.project.create({ data });
+ async createProject(
+    data: {
+      name: string;
+      ward: string;
+      Amount?: number;
+      budget?: number;
+      progress: number;
+      status: string;
+      deadline: string;
+    },
+    adminUserId?: number,
+  ) {
+    let municipality = 'Bhimdatta Municipality';
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      if (admin?.municipality) municipality = admin.municipality;
+    }
+
+    return this.prisma.project.create({
+      data: {
+        name: data.name,
+        municipality,
+        ward: data.ward,
+        Amount: Math.round(Number(data.Amount ?? data.budget ?? 0)),
+        progress: Number(data.progress ?? 0),
+        status: data.status,
+        deadline: data.deadline,
+      },
+    });
   }
 
   updateProject(
@@ -127,14 +219,27 @@ export class AdminService {
     data: Partial<{
       name: string;
       ward: string;
+      Amount: number;
+      budget: number;
       progress: number;
       status: string;
       deadline: string;
     }>,
   ) {
-    return this.prisma.project.update({ where: { id }, data });
-  }
+    const { budget, Amount, ...rest } = data;
+    const resolvedAmount = Amount !== undefined ? Amount : budget;
 
+    return this.prisma.project.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(resolvedAmount !== undefined
+          ? { Amount: Math.round(Number(resolvedAmount)) }
+          : {}),
+      },
+    });
+  }
+  
   async getBudgets() {
     const [items, recentChanges] = await Promise.all([
       this.prisma.budgetItem.findMany({ orderBy: { id: 'desc' } }),
@@ -194,17 +299,39 @@ export class AdminService {
     return updated;
   }
 
-  async getOfficials() {
+  async getOfficials(adminUserId?: number) {
+    let adminMunicipality: string | null = null;
+
+    if (adminUserId) {
+      const admin = await this.prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { municipality: true },
+      });
+      adminMunicipality = admin?.municipality ?? null;
+    }
+
     const list = await this.prisma.user.findMany({
-      where: { role: 'ward_admin' },
-      orderBy: { createdAt: 'desc' },
+      where: {
+        role: 'ward_admin',
+        ...(adminMunicipality
+          ? {
+              municipality: {
+                equals: adminMunicipality,
+                mode: 'insensitive',
+              },
+            }
+          : {}),
+      },
+      orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     });
 
     return list.map((u) => ({
       id: u.id,
       name: u.name,
       email: u.email,
+      municipality: u.municipality ?? 'Unassigned',
       ward: u.wardNo ? `Ward ${u.wardNo}` : 'Unassigned',
+      ward_no: u.wardNo,
       designation: u.designation,
       requestedAt: u.createdAt.toLocaleDateString('en-GB', {
         day: 'numeric',

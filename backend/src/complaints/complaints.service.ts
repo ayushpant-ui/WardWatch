@@ -6,6 +6,46 @@ import { CreateComplaintDto } from './dto/create-complaint.dto';
 export class ComplaintsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async autoEscalateOverdueComplaints() {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const overdueList = await this.prisma.complaint.findMany({
+      where: {
+        status: { notIn: ['Resolved', 'Escalated'] },
+        createdAt: { lt: sevenDaysAgo },
+      },
+      select: { id: true },
+    });
+
+    if (overdueList.length === 0) return;
+
+    const nowLabel = new Date().toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    await this.prisma.$transaction(
+      overdueList.map((item) =>
+        this.prisma.complaint.update({
+          where: { id: item.id },
+          data: {
+            status: 'Escalated',
+            isOverdue: true,
+            timeline: {
+              create: {
+                step: 'Auto-escalated to Municipal Admin (unresolved > 7 days)',
+                timestamp: nowLabel,
+                completed: true,
+              },
+            },
+          },
+        }),
+      ),
+    );
+  }
+
   private formatComplaint(item: any) {
     return {
       id: item.id,
@@ -108,5 +148,6 @@ export class ComplaintsService {
         timeline: created.timeline,
       },
     };
+    
   }
 }
