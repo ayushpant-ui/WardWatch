@@ -132,4 +132,28 @@ Existing digital systems often lack transparency in public budget spending, proj
 
 - Public Transparency Dashboard
 
-- Complaint Map
+- Login Based complaint system
+
+## 👨‍💻 Team Members & Responsibilities
+
+| Team Member | Role | Responsibilities |
+|---|---|---|
+| Ayush Pant |  Developer |Fronted/Backend Developement |
+| Yogesh Pant | Developer |Backend Developement |
+| Bibek Chand | Researcher/Designer|UI/UX/Presentation Designer |
+| Ganesh Bhatt | Research|Documnetation|
+
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend:** NestJS, TypeScript/PHP
+- **Database:** PostgreSQL, PostGIS
+- **Maps:** Leaflet, OpenStreetMap
+- **Authentication:** JWT, bcrypt
+- **Charts:** Recharts
+- **Forms & Validation:** React Hook Form, Zod
+- **API Documentation:** Swagger
+- **File Storage:** S3-compatible storage
+- **Background Jobs:** Redis, BullMQ
+
