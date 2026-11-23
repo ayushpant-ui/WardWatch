@@ -5,9 +5,7 @@ export default function PublicFooter() {
   return (
     <footer className="border-t border-border bg-background">
       <div className="mx-auto max-w-7xl px-6 py-14">
-
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2">
@@ -62,15 +60,13 @@ export default function PublicFooter() {
               connected communities through technology.
             </p>
           </div>
-
         </div>
 
         <div className="mt-12 border-t border-border pt-7 text-center">
           <p className="text-sm text-muted">
-            © {new Date().getFullYear()} WardWatch. All rights reserved.
+            © 2026 WardWatch. All rights reserved.
           </p>
         </div>
-
       </div>
     </footer>
   );

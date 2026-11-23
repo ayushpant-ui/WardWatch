@@ -23,7 +23,7 @@ import { RegisterOfficialDto } from '../auth/dto/register-official.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('municipal_admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(private readonly adminService: AdminService,) {}
 
   @Post('officials')
   createOfficial(@Body() dto: RegisterOfficialDto) {
@@ -34,7 +34,7 @@ export class AdminController {
   getOverview(@Req() req: any, @Query('ward') ward?: string) {
     return this.adminService.getOverview(req.user?.sub, ward);
   }
-  
+
   @Get('complaints')
   getComplaints() {
     return this.adminService.getAllComplaints();
@@ -104,4 +104,5 @@ export class AdminController {
   inviteOfficial(@Body() body: any) {
     return this.adminService.inviteOfficial(body);
   }
+
 }

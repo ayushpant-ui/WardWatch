@@ -9,7 +9,7 @@ interface ProjectItem {
   name: string;
   municipality?: string;
   ward: string;
-  budget: number;
+  Amount: number;
   progress: number;
   status: 'On track' | 'Delayed' | 'Completed';
   deadline: string;
@@ -29,10 +29,11 @@ export default function MunicipalityProjectsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [name, setName] = useState('');
   const [ward, setWard] = useState('Ward 1');
-  const [budget, setBudget] = useState<string>('0');
+  const [amount, setAmount] = useState<string>('0');
   const [progress, setProgress] = useState<number>(0);
   const [status, setStatus] = useState<'On track' | 'Delayed' | 'Completed'>('On track');
   const [deadline, setDeadline] = useState('');
@@ -72,9 +73,10 @@ export default function MunicipalityProjectsPage() {
 
   const openAddModal = () => {
     setEditingProject(null);
+    setErrorMsg('');
     setName('');
     setWard('Ward 1');
-    setBudget('');
+    setAmount('');
     setProgress(0);
     setStatus('On track');
     setDeadline('');
@@ -83,10 +85,11 @@ export default function MunicipalityProjectsPage() {
 
   const openEditModal = (project: ProjectItem) => {
     setEditingProject(project);
+    setErrorMsg('');
     setName(project.name);
     setWard(project.ward);
-    setBudget(String(project.budget ?? 0));
-    setProgress(project.progress);
+    setAmount(String(project.Amount ?? 0));
+    setProgress(project.progress ?? 0);
     setStatus(project.status);
     setDeadline(project.deadline);
     setModalOpen(true);
@@ -96,12 +99,15 @@ export default function MunicipalityProjectsPage() {
     e.preventDefault();
     try {
       setSaving(true);
+      setErrorMsg('');
+
+      const numericProgress = Number(progress) || 0;
       const payload = {
         name: name.trim(),
         ward,
-        budget: Number(budget) || 0,
-        progress: Number(progress) || 0,
-        status: Number(progress) === 100 ? 'Completed' : status,
+        Amount: Math.round(Number(amount) || 0),
+        progress: numericProgress,
+        status: numericProgress === 100 ? 'Completed' : status,
         deadline: deadline.trim(),
       };
 
@@ -115,6 +121,7 @@ export default function MunicipalityProjectsPage() {
       await fetchProjects();
     } catch (err) {
       console.error('Failed to save project:', err);
+      setErrorMsg('Failed to save project changes. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -219,7 +226,7 @@ export default function MunicipalityProjectsPage() {
                       <td className="py-4 font-semibold">{project.name}</td>
                       <td className="py-4 text-muted">{project.ward}</td>
                       <td className="py-4 font-medium">
-                        {formatNPR(project.budget)}
+                        {formatNPR(project.Amount)}
                       </td>
                       <td className="py-4">
                         <div className="flex items-center gap-3">
@@ -306,7 +313,7 @@ export default function MunicipalityProjectsPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Drainage & Road Widening"
+                  placeholder="e.g., Drainage and Sanitation, Haldukhal"
                   className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-primary"
                 />
               </div>
@@ -337,11 +344,11 @@ export default function MunicipalityProjectsPage() {
                   <input
                     type="number"
                     min={0}
-                    step="any"
+                    step={1}
                     required
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    placeholder="e.g., 500000"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="e.g., 50000"
                     className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-primary"
                   />
                 </div>
@@ -372,7 +379,7 @@ export default function MunicipalityProjectsPage() {
                     required
                     value={deadline}
                     onChange={(e) => setDeadline(e.target.value)}
-                    placeholder="e.g., 30 Jan"
+                    placeholder="e.g., 1 Dec"
                     className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-sm outline-none focus:border-primary"
                   />
                 </div>
@@ -393,6 +400,10 @@ export default function MunicipalityProjectsPage() {
                   className="w-full accent-emerald-500 cursor-pointer"
                 />
               </div>
+
+              {errorMsg && (
+                <p className="text-xs text-red-500">{errorMsg}</p>
+              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <button

@@ -180,10 +180,11 @@ async getProjects(adminUserId?: number) {
     });
   }
 
-  async createProject(
+ async createProject(
     data: {
       name: string;
       ward: string;
+      Amount?: number;
       budget?: number;
       progress: number;
       status: string;
@@ -205,7 +206,7 @@ async getProjects(adminUserId?: number) {
         name: data.name,
         municipality,
         ward: data.ward,
-        budget: Number(data.budget ?? 0),
+        Amount: Math.round(Number(data.Amount ?? data.budget ?? 0)),
         progress: Number(data.progress ?? 0),
         status: data.status,
         deadline: data.deadline,
@@ -213,26 +214,32 @@ async getProjects(adminUserId?: number) {
     });
   }
 
-updateProject(
+  updateProject(
     id: number,
     data: Partial<{
       name: string;
       ward: string;
+      Amount: number;
       budget: number;
       progress: number;
       status: string;
       deadline: string;
     }>,
   ) {
+    const { budget, Amount, ...rest } = data;
+    const resolvedAmount = Amount !== undefined ? Amount : budget;
+
     return this.prisma.project.update({
       where: { id },
       data: {
-        ...data,
-        ...(data.budget !== undefined ? { budget: Number(data.budget) } : {}),
+        ...rest,
+        ...(resolvedAmount !== undefined
+          ? { Amount: Math.round(Number(resolvedAmount)) }
+          : {}),
       },
     });
   }
-
+  
   async getBudgets() {
     const [items, recentChanges] = await Promise.all([
       this.prisma.budgetItem.findMany({ orderBy: { id: 'desc' } }),
